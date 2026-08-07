@@ -52,12 +52,6 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  // Logged-in users hitting the marketing home → dashboard
-  if (user && path === "/") {
-    const redirect = NextResponse.redirect(new URL("/dashboard", request.url));
-    return copyCookies(response, redirect);
-  }
-
   // Guests cannot open the dashboard
   if (!user && (path === "/dashboard" || path.startsWith("/dashboard/"))) {
     const login = new URL("/login", request.url);
