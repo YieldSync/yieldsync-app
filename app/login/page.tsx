@@ -13,10 +13,50 @@ import {
 } from "@/lib/auth/social";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import {
+  LAUNCHING_SOON_BODY,
+  LAUNCHING_SOON_TITLE,
+  SIGNUPS_ENABLED,
+} from "@/lib/product";
 
 function safeNextPath(raw: string | null | undefined) {
   if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/dashboard";
   return raw;
+}
+
+function readAuthErrorFromLocation(): string | null {
+  if (typeof window === "undefined") return null;
+  const search = new URLSearchParams(window.location.search);
+  const fromQuery =
+    search.get("error_description") ||
+    search.get("error_code") ||
+    search.get("error");
+
+  const hashRaw = window.location.hash.replace(/^#/, "");
+  const hash = new URLSearchParams(
+    hashRaw.includes("=") ? hashRaw : hashRaw.replace(/^error/, "error"),
+  );
+  // Support "#error=access_denied&error_code=signup_disabled&..."
+  const fromHash =
+    hash.get("error_description") ||
+    hash.get("error_code") ||
+    (hash.get("error") !== "auth" ? hash.get("error") : null);
+
+  const combined = [fromQuery, fromHash].filter(Boolean).join(" ");
+  if (!combined) return null;
+
+  const lower = combined.toLowerCase().replace(/\+/g, " ");
+  if (
+    lower.includes("signup_disabled") ||
+    lower.includes("signups not allowed") ||
+    lower.includes("access_denied")
+  ) {
+    return mapAuthError("signup_disabled");
+  }
+  if (search.get("error") === "auth" || fromHash) {
+    return mapAuthError(decodeURIComponent(combined.replace(/\+/g, " ")));
+  }
+  return null;
 }
 
 type Mode = "signin" | "signup";
@@ -40,11 +80,27 @@ export default function LoginPage() {
     const q = new URLSearchParams(window.location.search).get("next");
     setNextPath(safeNextPath(q));
 
+    const authErr = readAuthErrorFromLocation();
+    if (authErr) {
+      setError(authErr);
+      setMode("signin");
+      // Clean ugly OAuth error fragments from the URL
+      const next = safeNextPath(q);
+      const clean =
+        next && next !== "/dashboard"
+          ? `/login?next=${encodeURIComponent(next)}`
+          : "/login";
+      window.history.replaceState(null, "", clean);
+    }
+
     const syncMode = () => {
       const hash = window.location.hash.replace("#", "");
-      setMode(hash === "signup" ? "signup" : "signin");
-      setError(null);
-      setInfo(null);
+      const wantsSignup = hash === "signup" || hash.startsWith("signup");
+      setMode(wantsSignup ? "signup" : "signin");
+      if (!authErr) {
+        setError(null);
+        setInfo(null);
+      }
       setDone(false);
     };
     syncMode();
@@ -92,6 +148,11 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
     setInfo(null);
+
+    if (!SIGNUPS_ENABLED && mode === "signup") {
+      setError(mapAuthError("signup_disabled"));
+      return;
+    }
 
     if (!isSupabaseConfigured()) {
       setError(
@@ -164,6 +225,10 @@ export default function LoginPage() {
 
   async function onGoogle() {
     setError(null);
+    if (!SIGNUPS_ENABLED && mode === "signup") {
+      setError(mapAuthError("signup_disabled"));
+      return;
+    }
     setSocialLoading("google");
     try {
       await signInWithGoogle();
@@ -176,6 +241,10 @@ export default function LoginPage() {
 
   async function onSolana() {
     setError(null);
+    if (!SIGNUPS_ENABLED && mode === "signup") {
+      setError(mapAuthError("signup_disabled"));
+      return;
+    }
     setSocialLoading("solana");
     try {
       await signInWithSolana();
@@ -189,6 +258,7 @@ export default function LoginPage() {
   }
 
   const isSignup = mode === "signup";
+  const signupLocked = !SIGNUPS_ENABLED && isSignup;
 
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
@@ -272,21 +342,27 @@ export default function LoginPage() {
                 >
                   02
                 </span>
-                Get Started
+                {SIGNUPS_ENABLED ? "Get Started" : "Launching soon"}
               </button>
             </div>
 
             <div className="space-y-6 px-5 py-8 sm:px-8">
               <div>
                 <h1 className="text-[22px] font-semibold tracking-[-0.02em] text-foreground sm:text-[24px]">
-                  {isSignup ? "Create your account" : "Welcome back"}
+                  {signupLocked
+                    ? LAUNCHING_SOON_TITLE
+                    : isSignup
+                      ? "Create your account"
+                      : "Welcome back"}
                 </h1>
                 <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">
                   {checkingSession
                     ? "Checking session…"
-                    : isSignup
-                      ? "YieldSync free — 3 wallets forever"
-                      : "Sign in to YieldSync"}
+                    : signupLocked
+                      ? LAUNCHING_SOON_BODY
+                      : isSignup
+                        ? "YieldSync free — 3 wallets forever"
+                        : "Sign in to YieldSync"}
                 </p>
               </div>
 
@@ -294,14 +370,48 @@ export default function LoginPage() {
                 <p className="text-sm text-muted-foreground">
                   Redirecting to dashboard if you are already signed in…
                 </p>
+              ) : signupLocked ? (
+                <div className="space-y-4">
+                  <div
+                    role="status"
+                    className="rounded-none border border-primary/35 bg-primary/10 px-4 py-3 text-sm leading-relaxed text-foreground"
+                  >
+                    <p className="font-medium text-primary">
+                      {LAUNCHING_SOON_TITLE}
+                    </p>
+                    <p className="mt-1.5 text-muted-foreground">
+                      {LAUNCHING_SOON_BODY}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => switchMode("signin")}
+                    className="flex w-full items-center justify-center bg-primary px-4 py-3 text-[14px] font-semibold text-primary-foreground shadow-[var(--glow-button)] transition-transform hover:scale-[1.01]"
+                  >
+                    Sign in with existing account
+                  </button>
+                </div>
               ) : (
                 <>
                   {error && (
                     <p
                       role="alert"
-                      className="rounded-none border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger"
+                      className={
+                        /launching soon|registrations are closed/i.test(error)
+                          ? "rounded-none border border-primary/35 bg-primary/10 px-3 py-2 text-sm text-foreground"
+                          : "rounded-none border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger"
+                      }
                     >
-                      {error}
+                      {/launching soon|registrations are closed/i.test(error) ? (
+                        <>
+                          <span className="font-medium text-primary">
+                            {LAUNCHING_SOON_TITLE}.{" "}
+                          </span>
+                          {error}
+                        </>
+                      ) : (
+                        error
+                      )}
                     </p>
                   )}
                   {info && (
@@ -352,7 +462,11 @@ export default function LoginPage() {
                         </div>
                       </div>
 
-                      <form className="space-y-4" method="post" onSubmit={onEmailSubmit}>
+                      <form
+                        className="space-y-4"
+                        method="post"
+                        onSubmit={onEmailSubmit}
+                      >
                         <div>
                           <label className="mb-1.5 block text-[13px] font-medium text-muted-foreground">
                             Email

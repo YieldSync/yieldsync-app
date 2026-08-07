@@ -1,6 +1,11 @@
 import { LiquidGradient } from '@/components/liquid-gradient'
 import { DashboardMockup } from '@/components/dashboard-mockup'
 import content from '@/text-content/hero.json'
+import {
+  LAUNCHING_SOON_BODY,
+  LAUNCHING_SOON_TITLE,
+  SIGNUPS_ENABLED,
+} from '@/lib/product'
 
 export function Hero() {
   return (
@@ -27,6 +32,16 @@ export function Hero() {
 
         <div className="min-w-0 border-x border-border">
           <div className="flex flex-col items-center px-5 pb-8 pt-[100px] text-center sm:px-8 sm:pb-10 sm:pt-[110px]">
+            {!SIGNUPS_ENABLED ? (
+              <p
+                className="mc-rise mb-5 inline-flex items-center gap-2 border border-primary/35 bg-primary/10 px-3.5 py-1.5 text-[12px] font-semibold tracking-[0.04em] text-primary uppercase"
+                style={{ animationDelay: '40ms' }}
+              >
+                <span className="size-1.5 rounded-full bg-primary shadow-[0_0_12px_var(--primary)]" />
+                {LAUNCHING_SOON_TITLE}
+              </p>
+            ) : null}
+
             <h1 className="mc-rise max-w-[760px] text-pretty text-[34px] font-bold leading-[1.08] tracking-[-0.025em] text-foreground sm:text-[46px] md:text-[54px]">
               {content.title}
             </h1>
@@ -38,13 +53,40 @@ export function Hero() {
               {content.description}
             </p>
 
-            <a
-              href="/login#signup"
-              className="mc-rise mt-6 inline-flex rounded-none bg-primary px-7 py-3 text-[15px] font-semibold text-primary-foreground shadow-[var(--glow-button)] transition-transform hover:scale-[1.03]"
+            {!SIGNUPS_ENABLED ? (
+              <p
+                className="mc-rise mt-3 max-w-[440px] text-pretty text-[13px] leading-relaxed text-muted-foreground"
+                style={{ animationDelay: '180ms' }}
+              >
+                {LAUNCHING_SOON_BODY}
+              </p>
+            ) : null}
+
+            <div
+              className="mc-rise mt-6 flex flex-wrap items-center justify-center gap-3"
               style={{ animationDelay: '240ms' }}
             >
-              Get Started
-            </a>
+              {SIGNUPS_ENABLED ? (
+                <a
+                  href="/login#signup"
+                  className="inline-flex rounded-none bg-primary px-7 py-3 text-[15px] font-semibold text-primary-foreground shadow-[var(--glow-button)] transition-transform hover:scale-[1.03]"
+                >
+                  Get Started
+                </a>
+              ) : (
+                <>
+                  <a
+                    href="/login"
+                    className="inline-flex rounded-none bg-primary px-7 py-3 text-[15px] font-semibold text-primary-foreground shadow-[var(--glow-button)] transition-transform hover:scale-[1.03]"
+                  >
+                    Sign in
+                  </a>
+                  <span className="inline-flex rounded-none border border-border bg-background/40 px-5 py-3 text-[14px] font-medium text-muted-foreground backdrop-blur-sm">
+                    Public access · launching soon
+                  </span>
+                </>
+              )}
+            </div>
           </div>
 
           <div className="mc-bleed-t" aria-hidden />

@@ -21,8 +21,16 @@ export function mapAuthError(message: string) {
   if (lower.includes("rate limit") || lower.includes("over_email")) {
     return "Email rate limit hit (Supabase free tier). Prefer Google or Solana wallet, or disable Confirm email under Authentication → Sign In / Providers → User Signups.";
   }
-  if (lower.includes("email signups are disabled")) {
-    return "Email signups are disabled in Supabase. Use Google or Solana, or re-enable Email under Authentication → Providers.";
+  if (
+    lower.includes("signup_disabled") ||
+    lower.includes("signups not allowed") ||
+    lower.includes("sign ups not allowed") ||
+    lower.includes("email signups are disabled")
+  ) {
+    return "New registrations are closed for now — launching soon. Existing accounts can still sign in.";
+  }
+  if (lower.includes("access_denied") && lower.includes("signup")) {
+    return "New registrations are closed for now — launching soon. Existing accounts can still sign in.";
   }
   if (lower.includes("web3") && lower.includes("disabled")) {
     return "Web3 provider is disabled. Enable it in Supabase → Authentication → Providers → Web3.";

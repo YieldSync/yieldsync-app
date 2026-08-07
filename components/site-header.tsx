@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Menu, X } from 'lucide-react'
 import { Wordmark } from '@/components/brand'
 import { useCurrentUser } from '@/hooks/use-current-user'
+import { SIGNUPS_ENABLED } from '@/lib/product'
 import { cn } from '@/lib/utils'
 
 const NAV = [
@@ -98,10 +99,20 @@ export function SiteHeader() {
           ) : null}
 
           <Link
-            href={signedIn ? '/dashboard' : '/login#signup'}
+            href={
+              signedIn
+                ? '/dashboard'
+                : SIGNUPS_ENABLED
+                  ? '/login#signup'
+                  : '/login'
+            }
             className="hidden rounded-none bg-primary px-5 py-2.5 text-[14px] font-semibold text-primary-foreground shadow-[var(--glow-button)] transition-transform hover:scale-[1.03] sm:inline-flex"
           >
-            {signedIn ? 'Dashboard' : 'Get Started'}
+            {signedIn
+              ? 'Dashboard'
+              : SIGNUPS_ENABLED
+                ? 'Get Started'
+                : 'Sign in'}
           </Link>
 
           <button
@@ -154,11 +165,21 @@ export function SiteHeader() {
           ) : null}
 
           <Link
-            href={signedIn ? '/dashboard' : '/login#signup'}
+            href={
+              signedIn
+                ? '/dashboard'
+                : SIGNUPS_ENABLED
+                  ? '/login#signup'
+                  : '/login'
+            }
             onClick={() => setOpen(false)}
             className="mt-3 rounded-none bg-primary px-6 py-3 text-center text-[15px] font-semibold text-primary-foreground"
           >
-            {signedIn ? 'Dashboard' : 'Get Started'}
+            {signedIn
+              ? 'Dashboard'
+              : SIGNUPS_ENABLED
+                ? 'Get Started'
+                : 'Sign in'}
           </Link>
         </nav>
       </div>
