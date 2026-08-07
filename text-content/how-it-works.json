@@ -1,0 +1,21 @@
+{
+    "title": "Three Steps. That's All It Takes.",
+    "description": "Most liquidity providers spend hours searching for profitable wallets, analyzing positions, and managing their strategies manually. YieldSync helps you discover high-performing LPs and automatically copy their strategies in just a few minutes.",
+    "steps": [
+      {
+        "number": "01",
+        "title": "Create & Fund Your Trading Wallet",
+        "description": "Create your non-custodial trading wallet in seconds. Securely powered by Privy, your wallet stays under your control while YieldSync automates your strategies."
+      },
+      {
+        "number": "02",
+        "title": "Find High-Performing LP Wallets",
+        "description": "Discover profitable liquidity providers using YieldSync Wallet Intel or research wallets with your favorite analytics tools like LP Agent, Solscan, or Meteora."
+      },
+      {
+        "number": "03",
+        "title": "Build Your Strategy & Copy Automatically",
+        "description": "Choose the wallets you want to follow, customize your filters and strategy settings, and let YieldSync automatically mirror their liquidity actions—all while you stay in full control of your funds."
+      }
+    ]
+  }

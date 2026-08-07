@@ -1,0 +1,51 @@
+{
+    "title": "Simple Pricing, Built for LP Strategists",
+    "description": "Start free with the core tools to explore LP strategies, then upgrade as you need more wallet tracking, automation, and dedicated strategy management.",
+    "plans": [
+      {
+        "name": "Starter",
+        "target": "Users exploring LP strategies and testing YieldSync",
+        "price": "$0/mo",
+        "features": [
+          "Track up to 5 wallets",
+          "1 active copy strategy",
+          "Limited strategy settings",
+          "Basic wallet tracking"
+        ],
+        "cta": "Start Now"
+      },
+      {
+        "name": "Professional",
+        "target": "Active LP providers managing automated strategies",
+        "price": "$29/mo",
+        "badge": "Most Popular",
+        "features": [
+          "Track up to 20 wallets",
+          "Automated copy trading",
+          "Telegram alerts with visuals",
+          "One-click copy from alerts",
+          "Advanced strategy settings",
+          "Multiple copy strategies",
+          "Up to 5 dedicated strategy wallets",
+          "Private Pro community"
+        ],
+        "cta": "Get Started"
+      },
+      {
+        "name": "Scale",
+        "target": "Power users running multiple strategies across more wallets",
+        "price": "$99/mo",
+        "features": [
+          "Track up to 50 wallets",
+          "Automated copy trading",
+          "Telegram alerts with visuals",
+          "One-click copy from alerts",
+          "Advanced strategy settings",
+          "Multiple copy strategies",
+          "Up to 20 dedicated strategy wallets",
+          "Private Pro community"
+        ],
+        "cta": "Scale Up"
+      }
+    ]
+  }
