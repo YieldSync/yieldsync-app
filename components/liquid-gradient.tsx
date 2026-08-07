@@ -171,11 +171,11 @@ export function LiquidGradient({
   grain,
   interactive = false,
 }: LiquidGradientProps) {
-  const { theme } = useTheme()
-  const activePalette: ThemeId = palette ?? theme ?? DEFAULT_THEME
+  const { activePreset } = useTheme()
+  const activePalette: ThemeId = palette ?? activePreset.id
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const mouseRef = useRef<{ x: number; y: number } | null>(null)
-  const preset = getThemePreset(activePalette)
+  const preset = palette ? getThemePreset(palette) : activePreset
   const motion = preset.motion
 
   const sSeed = seed ?? motion.seed
@@ -376,7 +376,7 @@ export function LiquidGradient({
 
   return (
     <canvas
-      key={activePalette}
+      key={`${preset.primary}-${preset.chart.join('')}`}
       ref={canvasRef}
       aria-hidden="true"
       className={cn(

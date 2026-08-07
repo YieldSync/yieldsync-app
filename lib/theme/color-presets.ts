@@ -63,18 +63,18 @@ export const THEME_PRESETS: Record<ThemeId, ThemePreset> = {
   moss: {
     id: 'moss',
     label: 'Moss',
-    primary: '#5C9A72',
-    primaryHover: '#7BB08C',
-    primaryMuted: '#5c9a721f',
-    chart: ['#5C9A72', '#7BB08C', '#A8C9B4', '#3D6B4E', '#1A2A20'],
+    primary: '#3DDC84',
+    primaryHover: '#6EE7A0',
+    primaryMuted: '#3ddc841f',
+    chart: ['#3DDC84', '#6EE7A0', '#A7F3C5', '#1F9A56', '#0A2E1A'],
     liquidFallback:
-      'bg-[radial-gradient(130%_110%_at_30%_45%,#5c9a72_0%,#2a4034_45%,#080a09_100%)]',
+      'bg-[radial-gradient(130%_110%_at_30%_45%,#3ddc84_0%,#1a4d32_42%,#050605_100%)]',
     liquid: {
-      dark1: [0.03, 0.035, 0.032],
-      dark2: [0.08, 0.12, 0.1],
-      light1: [0.22, 0.38, 0.28],
-      primary: [0.361, 0.604, 0.447], // #5C9A72
-      light2: [0.62, 0.72, 0.66],
+      dark1: [0.02, 0.025, 0.022],
+      dark2: [0.06, 0.14, 0.09],
+      light1: [0.12, 0.42, 0.26],
+      primary: [0.239, 0.863, 0.518], // #3DDC84
+      light2: [0.72, 0.9, 0.78],
     },
     motion: LIQUID_MOTION_HERO,
   },

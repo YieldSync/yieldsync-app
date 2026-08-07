@@ -62,9 +62,9 @@ function ChainIcon({ className }: { className?: string }) {
 }
 
 function AreaChart() {
-  const { presets, theme } = useTheme()
-  const primary = presets[theme].primary
-  const hover = presets[theme].primaryHover
+  const { activePreset } = useTheme()
+  const primary = activePreset.primary
+  const hover = activePreset.primaryHover
   const points =
     '0,86 26,78 52,82 78,66 104,74 130,52 156,60 182,34 208,48 234,22 260,38 286,14 312,30 338,44 364,26 390,40'
   return (
@@ -93,8 +93,8 @@ function AreaChart() {
 }
 
 function Donut() {
-  const { presets, theme } = useTheme()
-  const [c1, c2, c3] = presets[theme].chart
+  const { activePreset } = useTheme()
+  const [c1, c2, c3] = activePreset.chart
   const segments = [
     { value: 40, color: c1 },
     { value: 35, color: c2 },
@@ -136,8 +136,8 @@ function Donut() {
 }
 
 export function DashboardMockup() {
-  const { presets, theme } = useTheme()
-  const [c1, c2, c3] = presets[theme].chart
+  const { activePreset } = useTheme()
+  const [c1, c2, c3] = activePreset.chart
 
   return (
     <div className="overflow-hidden rounded-[14px] border border-white/10 bg-[#141218] shadow-[var(--glow-accent-lg)]">
