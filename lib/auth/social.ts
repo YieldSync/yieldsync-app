@@ -150,22 +150,13 @@ export async function syncWalletAddressToProfile(
     .eq("id", user.id);
 }
 
+/**
+ * OAuth redirect MUST stay on the same origin that started the flow —
+ * the PKCE code verifier cookie is host-scoped. Never rewrite to another
+ * domain (that causes "PKCE code verifier not found in storage").
+ */
 function oauthRedirectOrigin(): string {
-  const origin = window.location.origin;
-  try {
-    const host = new URL(origin).hostname;
-    if (
-      host === "0.0.0.0" ||
-      host === "::" ||
-      host === "127.0.0.1" ||
-      host === "localhost"
-    ) {
-      return "https://yieldsync.io";
-    }
-  } catch {
-    return "https://yieldsync.io";
-  }
-  return origin;
+  return window.location.origin;
 }
 
 export async function signInWithGoogle() {

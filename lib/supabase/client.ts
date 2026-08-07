@@ -13,6 +13,13 @@ function getBrowserKey() {
   );
 }
 
+let browserClient: ReturnType<typeof createBrowserClient> | null = null;
+
+/**
+ * Browser client with cookie storage (PKCE verifier + session).
+ * detectSessionInUrl is off — /auth/callback/route.ts exchanges the code once
+ * on the server so we don't race and burn the verifier.
+ */
 export function createClient() {
   const url = getSupabaseUrl();
   const key = getBrowserKey();
@@ -23,7 +30,18 @@ export function createClient() {
     );
   }
 
-  return createBrowserClient(url, key);
+  if (browserClient) return browserClient;
+
+  browserClient = createBrowserClient(url, key, {
+    auth: {
+      flowType: "pkce",
+      detectSessionInUrl: false,
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+  });
+
+  return browserClient;
 }
 
 export function isSupabaseConfigured() {
