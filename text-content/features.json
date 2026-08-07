@@ -1,0 +1,30 @@
+{
+    "title": "Everything You Need to Copy Winning LP Strategies",
+    "description": "From discovering profitable liquidity providers to fully automating your copy strategies, YieldSync gives you everything you need to stay ahead on Meteora.",
+    "features": [
+      {
+        "title": "Non-Custodial",
+        "description": "Your funds stay under your control. Wallets are securely created and managed through Privy's trusted wallet infrastructure, with no need to share private keys or give up ownership of your assets."
+      },
+      {
+        "title": "Wallet Intelligence",
+        "description": "Discover high-performing LP wallets using YieldSync Wallet Intel or your favorite on-chain analytics tools."
+      },
+      {
+        "title": "Automated Copy Trading",
+        "description": "Automatically mirror liquidity actions from the wallets you choose—without constant monitoring."
+      },
+      {
+        "title": "Multiple Strategies",
+        "description": "Create independent copy strategies with dedicated wallets, custom filters, and individual allocations."
+      },
+      {
+        "title": "Built for Meteora",
+        "description": "Designed for Meteora liquidity providers with native support for DLMM and DAMM V2 strategies."
+      },
+      {
+        "title": "Full Control",
+        "description": "Pause, edit, or stop your strategies at any time. You decide which wallets to follow and how your capital is allocated."
+      }
+    ]
+  }

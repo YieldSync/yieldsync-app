@@ -21,7 +21,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useRouter } from "next/navigation"
 import { useColorScheme } from "@/hooks/use-color-scheme"
+import { useSupabaseAuth } from "@/components/supabase-auth-provider"
 import { account } from "@/lib/plans"
 import {
   navGroups,
@@ -38,6 +40,15 @@ export function Sidebar({
   active: SectionId
   onNavigate?: () => void
 }) {
+  const router = useRouter()
+  const { supabase } = useSupabaseAuth()
+
+  async function handleSignOut() {
+    if (supabase) await supabase.auth.signOut()
+    router.replace("/login")
+    router.refresh()
+  }
+
   const { scheme, toggle } = useColorScheme()
 
   return (
@@ -146,7 +157,7 @@ export function Sidebar({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive">
+            <DropdownMenuItem variant="destructive" onClick={handleSignOut}>
               <LogOut />
               Sign Out
             </DropdownMenuItem>
