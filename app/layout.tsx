@@ -1,7 +1,9 @@
 import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import type { Metadata, Viewport } from 'next'
 import { DM_Sans, JetBrains_Mono } from 'next/font/google'
 import { Providers } from '@/components/providers'
+import { DEFAULT_THEME } from '@/lib/theme/color-presets'
 import './globals.css'
 
 const dmSans = DM_Sans({
@@ -58,13 +60,25 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      data-theme="orange"
+      data-theme={DEFAULT_THEME}
       className={`dark ${dmSans.variable} ${jetbrains.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('ys-theme');if(t==='orange'||t==='purple'||t==='blue')document.documentElement.setAttribute('data-theme',t)}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body className={`${dmSans.className} min-h-full bg-background text-foreground`}>
         <Providers>{children}</Providers>
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        {process.env.NODE_ENV === 'production' && (
+          <>
+            <Analytics />
+            <SpeedInsights />
+          </>
+        )}
       </body>
     </html>
   )

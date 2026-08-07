@@ -35,6 +35,7 @@ import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { SectionHeader } from "@/components/dashboard/primitives"
+import { AdminAppearanceCard } from "@/components/sections/admin-appearance-card"
 import { shortAddress } from "@/lib/data"
 
 const connectedWallets = [
@@ -165,6 +166,8 @@ export function SettingsSection() {
         title="Settings"
         description="Profile, security, notifications and platform preferences for your YieldSync workspace."
       />
+
+      <AdminAppearanceCard />
 
       <Card>
         <CardHeader>

@@ -7,6 +7,7 @@ import {
   getThemePreset,
   type ThemeId,
 } from '@/lib/theme/color-presets'
+import { useTheme } from '@/components/theme-provider'
 
 const VERTEX_SHADER = `
 attribute vec2 a_pos;
@@ -158,7 +159,7 @@ export type LiquidGradientProps = {
 
 export function LiquidGradient({
   className,
-  palette = DEFAULT_THEME,
+  palette,
   seed,
   speed,
   scale,
@@ -170,9 +171,11 @@ export function LiquidGradient({
   grain,
   interactive = false,
 }: LiquidGradientProps) {
+  const { theme } = useTheme()
+  const activePalette: ThemeId = palette ?? theme ?? DEFAULT_THEME
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const mouseRef = useRef<{ x: number; y: number } | null>(null)
-  const preset = getThemePreset(palette)
+  const preset = getThemePreset(activePalette)
   const motion = preset.motion
 
   const sSeed = seed ?? motion.seed
@@ -349,7 +352,7 @@ export function LiquidGradient({
       gl.deleteBuffer(buffer)
     }
   }, [
-    palette,
+    activePalette,
     sSeed,
     sSpeed,
     sScale,
@@ -360,7 +363,6 @@ export function LiquidGradient({
     sAmount,
     sGrain,
     interactive,
-    palette,
   ])
 
   return (
