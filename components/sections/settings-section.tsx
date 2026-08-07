@@ -36,6 +36,7 @@ import { Switch } from "@/components/ui/switch"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { SectionHeader } from "@/components/dashboard/primitives"
 import { AdminAppearanceCard } from "@/components/sections/admin-appearance-card"
+import { useColorScheme } from "@/hooks/use-color-scheme"
 import { shortAddress } from "@/lib/data"
 
 const connectedWallets = [
@@ -147,7 +148,7 @@ const alertGroups: {
 ]
 
 export function SettingsSection() {
-  const [theme, setTheme] = useState("dark")
+  const { scheme, setScheme } = useColorScheme()
   const [twoFactor, setTwoFactor] = useState(true)
   const [alerts, setAlerts] = useState<Record<ToggleKey, boolean>>({
     walletActivity: true,
@@ -408,18 +409,22 @@ export function SettingsSection() {
         <CardContent>
           <FieldGroup>
             <Field>
-              <FieldLabel>Theme</FieldLabel>
+              <FieldLabel>Appearance mode</FieldLabel>
               <ToggleGroup
-                value={[theme]}
-                onValueChange={(value) => value[0] && setTheme(value[0] as string)}
+                value={[scheme]}
+                onValueChange={(value) => {
+                  const next = value[0]
+                  if (next === "dark" || next === "light") setScheme(next)
+                }}
                 variant="outline"
                 spacing={0}
               >
                 <ToggleGroupItem value="dark">Dark</ToggleGroupItem>
-                <ToggleGroupItem value="system">System</ToggleGroupItem>
+                <ToggleGroupItem value="light">Light</ToggleGroupItem>
               </ToggleGroup>
               <FieldDescription>
-                YieldSync is optimized for the dark interface.
+                Keeps your brand colors (Moss / custom). Only backgrounds and
+                text flip between dark and light.
               </FieldDescription>
             </Field>
 

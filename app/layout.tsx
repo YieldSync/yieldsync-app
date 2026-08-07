@@ -48,8 +48,11 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  colorScheme: 'dark',
-  themeColor: '#050605',
+  colorScheme: 'dark light',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f3f7f4' },
+    { media: '(prefers-color-scheme: dark)', color: '#050605' },
+  ],
 }
 
 export default function RootLayout({
@@ -67,7 +70,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var m=localStorage.getItem('ys-brand-theme-mode');var t=localStorage.getItem('ys-brand-theme');if(m!=='custom'&&(t==='moss'||t==='orange'||t==='purple'||t==='blue'))document.documentElement.setAttribute('data-theme',t)}catch(e){}})()`,
+            __html: `(function(){try{var m=localStorage.getItem('ys-brand-theme-mode');var t=localStorage.getItem('ys-brand-theme');var s=localStorage.getItem('ys-color-scheme');if(m!=='custom'&&(t==='moss'||t==='orange'||t==='purple'||t==='blue'))document.documentElement.setAttribute('data-theme',t);else if(!t)document.documentElement.setAttribute('data-theme','moss');if(s==='light'){document.documentElement.classList.add('light');document.documentElement.classList.remove('dark');document.documentElement.style.colorScheme='light'}else{document.documentElement.classList.add('dark');document.documentElement.classList.remove('light');document.documentElement.style.colorScheme='dark'}}catch(e){}})()`,
           }}
         />
       </head>

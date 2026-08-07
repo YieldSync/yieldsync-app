@@ -1,26 +1,11 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useTheme, type ColorScheme } from "@/components/theme-provider"
 
-export type ColorScheme = "dark" | "light"
+export type { ColorScheme }
 
+/** Light / dark surface mode — keeps the active brand palette (e.g. Moss). */
 export function useColorScheme() {
-  const [scheme, setScheme] = useState<ColorScheme>("dark")
-
-  useEffect(() => {
-    setScheme(document.documentElement.classList.contains("light") ? "light" : "dark")
-  }, [])
-
-  const toggle = useCallback(() => {
-    setScheme((current) => {
-      const next: ColorScheme = current === "dark" ? "light" : "dark"
-      const root = document.documentElement
-      root.classList.toggle("light", next === "light")
-      root.classList.toggle("dark", next === "dark")
-      root.style.colorScheme = next
-      return next
-    })
-  }, [])
-
-  return { scheme, toggle }
+  const { scheme, setScheme, toggleScheme } = useTheme()
+  return { scheme, setScheme, toggle: toggleScheme }
 }

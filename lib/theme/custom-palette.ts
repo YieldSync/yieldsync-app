@@ -128,13 +128,79 @@ export function customToPreset(p: CustomPalette): ThemePreset {
 }
 
 /** Inline CSS variables for custom theme (overrides data-theme tokens). */
-export function applyCustomCssVars(p: CustomPalette) {
+export function applyCustomCssVars(
+  p: CustomPalette,
+  scheme: "dark" | "light" = "dark",
+) {
   const root = document.documentElement
-  const primaryFg = p.primaryForeground ?? contrastText(p.primary)
   const rgb = hexToRgb(p.primary)
+  const [pr, pg, pb] = rgb
+
+  if (scheme === "light") {
+    const primary = softMix(p.primary, "#000000", 0.18)
+    const primaryRgb = hexToRgb(primary)
+    const background = softMix("#ffffff", p.primary, 0.05)
+    const foreground = softMix(p.background, "#000000", 0.75)
+    const card = "#ffffff"
+    const mutedFg = softMix(foreground, "#ffffff", 0.4)
+    const hover = softMix(primary, "#ffffff", 0.18)
+    const active = softMix(primary, "#000000", 0.12)
+    const primaryFg = "#ffffff"
+    const [lr, lg, lb] = primaryRgb
+
+    const map: Record<string, string> = {
+      "--background": background,
+      "--surface": softMix(background, "#000000", 0.03),
+      "--foreground": foreground,
+      "--card": card,
+      "--card-foreground": foreground,
+      "--popover": card,
+      "--popover-foreground": foreground,
+      "--primary": primary,
+      "--primary-foreground": primaryFg,
+      "--secondary": softMix(background, "#000000", 0.04),
+      "--secondary-foreground": foreground,
+      "--muted": softMix(background, "#000000", 0.04),
+      "--muted-foreground": mutedFg,
+      "--accent": softMix(background, primary, 0.08),
+      "--accent-foreground": foreground,
+      "--ring": primary,
+      "--chart-1": primary,
+      "--chart-2": hover,
+      "--chart-3": softMix(primary, "#000000", 0.25),
+      "--chart-4": softMix(primary, "#ffffff", 0.35),
+      "--chart-5": softMix(primary, "#ffffff", 0.55),
+      "--sidebar": softMix(background, "#000000", 0.02),
+      "--sidebar-foreground": foreground,
+      "--sidebar-primary": primary,
+      "--sidebar-primary-foreground": primaryFg,
+      "--sidebar-accent": softMix(background, primary, 0.1),
+      "--sidebar-accent-foreground": foreground,
+      "--sidebar-ring": primary,
+      "--background-elevated": card,
+      "--background-subtle": softMix(background, "#000000", 0.02),
+      "--background-muted": softMix(background, "#000000", 0.04),
+      "--foreground-secondary": foreground,
+      "--foreground-muted": mutedFg,
+      "--accent-hover": hover,
+      "--accent-active": active,
+      "--accent-muted": `${primary}1f`,
+      "--border": "rgba(12, 20, 16, 0.12)",
+      "--input": "rgba(12, 20, 16, 0.14)",
+      "--border-accent": `${primary}40`,
+      "--glow-accent": `0 0 24px rgba(${lr}, ${lg}, ${lb}, 0.22)`,
+      "--glow-accent-lg": `0 0 40px rgba(${lr}, ${lg}, ${lb}, 0.25)`,
+      "--glow-button": `0 10px 36px -8px color-mix(in srgb, ${primary} 50%, transparent)`,
+      "--success": primary,
+      "--success-foreground": primaryFg,
+    }
+    Object.entries(map).forEach(([k, v]) => root.style.setProperty(k, v))
+    return
+  }
+
+  const primaryFg = p.primaryForeground ?? contrastText(p.primary)
   const hover = rgbToHex(...mix(rgb, [255, 255, 255], 0.22))
   const active = rgbToHex(...mix(rgb, [0, 0, 0], 0.18))
-  const [pr, pg, pb] = rgb
 
   const map: Record<string, string> = {
     "--background": p.background,
