@@ -1,0 +1,42 @@
+{
+    "title": "Frequently Asked Questions",
+    "description": "Everything you need to know before starting with YieldSync. We answer the most common questions about automated LP strategies, wallet security, and copy trading.",
+    "faqs": [
+      {
+        "question": "What is YieldSync?",
+        "answer": "YieldSync is an automation platform for Meteora liquidity providers that helps you discover high-performing LP wallets and automatically copy their strategies with your own settings."
+      },
+      {
+        "question": "How does automated copy trading work?",
+        "answer": "Choose the LP wallets you want to follow, configure your strategy settings and filters, and YieldSync automatically mirrors their liquidity actions based on your preferences."
+      },
+      {
+        "question": "Are my funds safe and do I stay in control of my wallet?",
+        "answer": "YieldSync uses Privy's secure wallet infrastructure to create and manage your wallet. Your wallet remains under your ownership, and you control which strategies, wallets, and settings are activated. To enable automated copy trading, YieldSync's executor can request transaction signatures through Privy to perform approved actions on your behalf."
+      },
+      {
+        "question": "What permissions does YieldSync require?",
+        "answer": "YieldSync requires transaction signing permissions through Privy to automate your selected LP strategies. These permissions allow the executor to perform the blockchain actions required for your configured strategies. You should only enable strategies and settings you understand and trust."
+      },
+      {
+        "question": "Which Meteora pools are supported?",
+        "answer": "YieldSync is built for Meteora liquidity providers and supports strategies across DLMM and DAMM V2 pools."
+      },
+      {
+        "question": "Can I run multiple copy strategies at the same time?",
+        "answer": "Yes. You can create multiple independent strategies with dedicated wallets, custom filters, and individual allocations for each strategy."
+      },
+      {
+        "question": "How do I find profitable LP wallets to follow?",
+        "answer": "Use YieldSync Wallet Intel or research wallets through your preferred analytics tools like LP Agent, Solscan, or Meteora. Select the wallets that match your strategy and risk preferences."
+      },
+      {
+        "question": "Can I customize how strategies are copied?",
+        "answer": "Yes. You can define your own filters, settings, allocations, and strategy rules instead of blindly copying every action."
+      },
+      {
+        "question": "How can I contact support?",
+        "answer": "You can contact the YieldSync support team directly through the support function inside your dashboard or reach out through our Telegram community: https://telegram.com/PLACEHOLDER"
+      }
+    ]
+  }
