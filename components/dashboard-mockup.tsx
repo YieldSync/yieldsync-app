@@ -1,3 +1,5 @@
+'use client'
+
 import {
   Bell,
   Calendar,
@@ -14,6 +16,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LogoMark } from '@/components/brand'
+import { useTheme } from '@/components/theme-provider'
 
 const MENU = [
   { label: 'Dashboard', icon: LayoutGrid, active: true },
@@ -59,6 +62,9 @@ function ChainIcon({ className }: { className?: string }) {
 }
 
 function AreaChart() {
+  const { presets, theme } = useTheme()
+  const primary = presets[theme].primary
+  const hover = presets[theme].primaryHover
   const points =
     '0,86 26,78 52,82 78,66 104,74 130,52 156,60 182,34 208,48 234,22 260,38 286,14 312,30 338,44 364,26 390,40'
   return (
@@ -70,15 +76,15 @@ function AreaChart() {
     >
       <defs>
         <linearGradient id="mc-area" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#ff5d00" stopOpacity="0.55" />
-          <stop offset="100%" stopColor="#ff5d00" stopOpacity="0" />
+          <stop offset="0%" stopColor={primary} stopOpacity="0.55" />
+          <stop offset="100%" stopColor={primary} stopOpacity="0" />
         </linearGradient>
       </defs>
       <polygon points={`${points} 390,100 0,100`} fill="url(#mc-area)" />
       <polyline
         points={points}
         fill="none"
-        stroke="#ff8a3d"
+        stroke={hover}
         strokeWidth="1.6"
         strokeLinejoin="round"
       />
@@ -87,10 +93,12 @@ function AreaChart() {
 }
 
 function Donut() {
+  const { presets, theme } = useTheme()
+  const [c1, c2, c3] = presets[theme].chart
   const segments = [
-    { value: 40, color: '#ff5d00' },
-    { value: 35, color: '#c44a00' },
-    { value: 25, color: '#ffd28f' },
+    { value: 40, color: c1 },
+    { value: 35, color: c2 },
+    { value: 25, color: c3 },
   ]
   const r = 42
   const c = 2 * Math.PI * r
@@ -128,8 +136,11 @@ function Donut() {
 }
 
 export function DashboardMockup() {
+  const { presets, theme } = useTheme()
+  const [c1, c2, c3] = presets[theme].chart
+
   return (
-    <div className="overflow-hidden rounded-[14px] border border-white/10 bg-[#141218] shadow-[0_40px_120px_-40px_rgba(255,93,0,0.55)]">
+    <div className="overflow-hidden rounded-[14px] border border-white/10 bg-[#141218] shadow-[var(--glow-accent-lg)]">
       <div className="flex">
         {/* Sidebar */}
         <aside className="hidden w-[212px] shrink-0 flex-col justify-between border-r border-border bg-[#0c0a10] lg:flex">
@@ -262,7 +273,12 @@ export function DashboardMockup() {
                       </span>
                     </div>
                     <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/8">
-                      <div className="h-full w-[74%] rounded-full bg-gradient-to-r from-[#c44a00] to-[#ffd28f]" />
+                      <div
+                        className="h-full w-[74%] rounded-full"
+                        style={{
+                          background: `linear-gradient(to right, ${c2}, ${c3})`,
+                        }}
+                      />
                     </div>
                   </div>
 
@@ -341,9 +357,9 @@ export function DashboardMockup() {
                 <Donut />
                 <ul className="mt-3 flex flex-col gap-1.5">
                   {[
-                    { label: 'Gas fees', value: '40%', color: '#ff5d00' },
-                    { label: 'Staking Rewards', value: '35%', color: '#c44a00' },
-                    { label: 'Exchange Fees', value: '25%', color: '#ffd28f' },
+                    { label: 'Gas fees', value: '40%', color: c1 },
+                    { label: 'Staking Rewards', value: '35%', color: c2 },
+                    { label: 'Exchange Fees', value: '25%', color: c3 },
                   ].map((row) => (
                     <li
                       key={row.label}

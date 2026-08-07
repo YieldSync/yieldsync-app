@@ -1,4 +1,5 @@
 import { createBrowserClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 function getSupabaseUrl() {
   return process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
@@ -13,14 +14,14 @@ function getBrowserKey() {
   );
 }
 
-let browserClient: ReturnType<typeof createBrowserClient> | null = null;
+let browserClient: SupabaseClient | null = null;
 
 /**
  * Browser client with cookie storage (PKCE verifier + session).
  * detectSessionInUrl is off — /auth/callback/route.ts exchanges the code once
  * on the server so we don't race and burn the verifier.
  */
-export function createClient() {
+export function createClient(): SupabaseClient {
   const url = getSupabaseUrl();
   const key = getBrowserKey();
 

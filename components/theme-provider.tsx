@@ -14,10 +14,15 @@ import {
   type ThemeId,
 } from "@/lib/theme/color-presets"
 
-export const THEME_STORAGE_KEY = "ys-theme"
+export const THEME_STORAGE_KEY = "ys-brand-theme"
 
 export function isThemeId(value: string | null | undefined): value is ThemeId {
-  return value === "orange" || value === "purple" || value === "blue"
+  return (
+    value === "moss" ||
+    value === "orange" ||
+    value === "purple" ||
+    value === "blue"
+  )
 }
 
 export function readStoredTheme(): ThemeId {

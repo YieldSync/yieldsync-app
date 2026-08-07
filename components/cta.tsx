@@ -34,7 +34,7 @@ export function Cta() {
 
           <Link
             href="#pricing"
-            className="mt-3 inline-flex items-center justify-center rounded-full bg-primary px-8 py-3.5 text-[16px] font-semibold text-primary-foreground shadow-[0_10px_40px_-8px_rgba(47,107,255,0.9)] transition-transform hover:scale-[1.03]"
+            className="mt-3 inline-flex items-center justify-center rounded-full bg-primary px-8 py-3.5 text-[16px] font-semibold text-primary-foreground shadow-[var(--glow-button)] transition-transform hover:scale-[1.03]"
           >
             {content.cta}
           </Link>

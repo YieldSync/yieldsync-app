@@ -1,13 +1,14 @@
 /**
- * Saved YieldSync color / liquid presets.
- * Default active theme: orange (Meteora / feurig)
+ * YieldSync color / liquid presets.
+ * Default: moss (green / gray / near-black)
  *
- * - orange  — Meteora / YieldSync live palette (#FF5D00) — default
- * - purple  — MegaCrypt Framer reference (#8B1AFF)
+ * - moss    — green–gray–black (default)
+ * - orange  — Meteora (#FF5D00)
+ * - purple  — MegaCrypt Framer (#8B1AFF)
  * - blue    — archived electric blue
  */
 
-export type ThemeId = 'blue' | 'orange' | 'purple'
+export type ThemeId = 'moss' | 'blue' | 'orange' | 'purple'
 
 export type LiquidMotion = {
   seed: number
@@ -58,6 +59,26 @@ export const LIQUID_MOTION_HERO: LiquidMotion = {
 }
 
 export const THEME_PRESETS: Record<ThemeId, ThemePreset> = {
+  /** Green / cool gray / near-black — default */
+  moss: {
+    id: 'moss',
+    label: 'Moss',
+    primary: '#5C9A72',
+    primaryHover: '#7BB08C',
+    primaryMuted: '#5c9a721f',
+    chart: ['#5C9A72', '#7BB08C', '#A8C9B4', '#3D6B4E', '#1A2A20'],
+    liquidFallback:
+      'bg-[radial-gradient(130%_110%_at_30%_45%,#5c9a72_0%,#2a4034_45%,#080a09_100%)]',
+    liquid: {
+      dark1: [0.03, 0.035, 0.032],
+      dark2: [0.08, 0.12, 0.1],
+      light1: [0.22, 0.38, 0.28],
+      primary: [0.361, 0.604, 0.447], // #5C9A72
+      light2: [0.62, 0.72, 0.66],
+    },
+    motion: LIQUID_MOTION_HERO,
+  },
+
   blue: {
     id: 'blue',
     label: 'Blue',
@@ -71,13 +92,12 @@ export const THEME_PRESETS: Record<ThemeId, ThemePreset> = {
       dark1: [0.02, 0.03, 0.08],
       dark2: [0.05, 0.12, 0.38],
       light1: [0.12, 0.32, 0.92],
-      primary: [0.184, 0.42, 1.0], // #2F6BFF
+      primary: [0.184, 0.42, 1.0],
       light2: [0.66, 0.78, 1.0],
     },
     motion: LIQUID_MOTION_HERO,
   },
 
-  /** Previous live YieldSync / Meteora orange — preserved */
   orange: {
     id: 'orange',
     label: 'Orange (Meteora)',
@@ -91,13 +111,12 @@ export const THEME_PRESETS: Record<ThemeId, ThemePreset> = {
       dark1: [0.04, 0.015, 0.0],
       dark2: [0.28, 0.08, 0.0],
       light1: [0.85, 0.3, 0.0],
-      primary: [1.0, 0.365, 0.0], // #FF5D00
+      primary: [1.0, 0.365, 0.0],
       light2: [1.0, 0.82, 0.56],
     },
     motion: LIQUID_MOTION_HERO,
   },
 
-  /** MegaCrypt Framer purple reference — preserved */
   purple: {
     id: 'purple',
     label: 'Purple (MegaCrypt)',
@@ -111,7 +130,7 @@ export const THEME_PRESETS: Record<ThemeId, ThemePreset> = {
       dark1: [0.04, 0.02, 0.08],
       dark2: [0.22, 0.06, 0.42],
       light1: [0.55, 0.18, 0.95],
-      primary: [0.545, 0.102, 1.0], // #8B1AFF
+      primary: [0.545, 0.102, 1.0],
       light2: [0.83, 0.7, 1.0],
     },
     motion: LIQUID_MOTION_HERO,
@@ -119,8 +138,8 @@ export const THEME_PRESETS: Record<ThemeId, ThemePreset> = {
 }
 
 /** Active default for the whole app (CSS + liquid). */
-export const DEFAULT_THEME: ThemeId = 'orange'
+export const DEFAULT_THEME: ThemeId = 'moss'
 
 export function getThemePreset(id: ThemeId = DEFAULT_THEME): ThemePreset {
-  return THEME_PRESETS[id] ?? THEME_PRESETS.orange
+  return THEME_PRESETS[id] ?? THEME_PRESETS.moss
 }

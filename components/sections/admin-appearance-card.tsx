@@ -15,7 +15,7 @@ import { useCurrentUser } from "@/hooks/use-current-user"
 import { DEFAULT_THEME, type ThemeId } from "@/lib/theme/color-presets"
 import { cn } from "@/lib/utils"
 
-const ORDER: ThemeId[] = ["orange", "purple", "blue"]
+const ORDER: ThemeId[] = ["moss", "orange", "purple", "blue"]
 
 /**
  * Admin-only brand color switcher — updates html[data-theme] for landing + dashboard.
@@ -42,7 +42,7 @@ export function AdminAppearanceCard() {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {ORDER.map((id) => {
             const preset = presets[id]
             const active = theme === id

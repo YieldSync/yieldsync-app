@@ -99,7 +99,7 @@ export function SiteHeader() {
 
           <Link
             href={signedIn ? '/dashboard' : '/login#signup'}
-            className="hidden rounded-none bg-primary px-5 py-2.5 text-[14px] font-semibold text-primary-foreground shadow-[0_0_30px_-6px_rgba(255,93,0,0.85)] transition-transform hover:scale-[1.03] sm:inline-flex"
+            className="hidden rounded-none bg-primary px-5 py-2.5 text-[14px] font-semibold text-primary-foreground shadow-[var(--glow-button)] transition-transform hover:scale-[1.03] sm:inline-flex"
           >
             {signedIn ? 'Dashboard' : 'Get Started'}
           </Link>

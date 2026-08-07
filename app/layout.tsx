@@ -49,7 +49,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: 'dark',
-  themeColor: '#050505',
+  themeColor: '#070807',
 }
 
 export default function RootLayout({
@@ -67,7 +67,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('ys-theme');if(t==='orange'||t==='purple'||t==='blue')document.documentElement.setAttribute('data-theme',t)}catch(e){}})()`,
+            __html: `(function(){try{var t=localStorage.getItem('ys-brand-theme');if(t==='moss'||t==='orange'||t==='purple'||t==='blue')document.documentElement.setAttribute('data-theme',t)}catch(e){}})()`,
           }}
         />
       </head>

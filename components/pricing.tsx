@@ -103,7 +103,7 @@ export function Pricing() {
                   className={cn(
                     'flex h-11 items-center justify-center rounded-lg border text-[14px] font-semibold transition-transform hover:scale-[1.02]',
                     popular
-                      ? 'border-primary bg-primary text-primary-foreground shadow-[0_0_30px_-8px_rgba(47,107,255,0.9)]'
+                      ? 'border-primary bg-primary text-primary-foreground shadow-[var(--glow-button)]'
                       : 'border-border bg-secondary text-foreground',
                   )}
                 >

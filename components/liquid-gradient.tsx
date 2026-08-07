@@ -188,6 +188,9 @@ export function LiquidGradient({
   const sAmount = amount ?? motion.amount
   const sGrain = grain ?? motion.grain
 
+  const stopsRef = useRef(preset.liquid)
+  stopsRef.current = preset.liquid
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -245,7 +248,7 @@ export function LiquidGradient({
       light2: gl.getUniformLocation(program, 'u_light2'),
     }
 
-    const stops = preset.liquid
+    const stops = stopsRef.current
     gl.uniform1f(locs.scale, sScale)
     gl.uniform1f(locs.seed, sSeed)
     gl.uniform1f(locs.speed, sSpeed)
@@ -286,6 +289,12 @@ export function LiquidGradient({
 
     const render = () => {
       resize()
+      const live = stopsRef.current
+      set3(locs.dark1, live.dark1)
+      set3(locs.dark2, live.dark2)
+      set3(locs.light1, live.light1)
+      set3(locs.primary, live.primary)
+      set3(locs.light2, live.light2)
       gl.uniform1f(
         locs.time,
         reduceMotion ? 0 : (performance.now() - start) / 1000,
@@ -367,6 +376,7 @@ export function LiquidGradient({
 
   return (
     <canvas
+      key={activePalette}
       ref={canvasRef}
       aria-hidden="true"
       className={cn(

@@ -40,7 +40,7 @@ export function Hero() {
 
             <a
               href="/login#signup"
-              className="mc-rise mt-6 inline-flex rounded-none bg-primary px-7 py-3 text-[15px] font-semibold text-primary-foreground shadow-[0_10px_40px_-8px_rgba(255,93,0,0.9)] transition-transform hover:scale-[1.03]"
+              className="mc-rise mt-6 inline-flex rounded-none bg-primary px-7 py-3 text-[15px] font-semibold text-primary-foreground shadow-[var(--glow-button)] transition-transform hover:scale-[1.03]"
               style={{ animationDelay: '240ms' }}
             >
               Get Started
@@ -68,7 +68,7 @@ export function Hero() {
               className="pointer-events-none absolute inset-0"
               style={{
                 background:
-                  'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 35%, transparent 70%, rgba(255,93,0,0.06) 100%)',
+                  'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 35%, transparent 70%, color-mix(in srgb, var(--primary) 8%, transparent) 100%)',
               }}
             />
 

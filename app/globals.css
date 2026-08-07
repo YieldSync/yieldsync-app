@@ -6,13 +6,76 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
-  YieldSync color themes — presets in src/lib/theme/color-presets.ts
-  Default: orange (Meteora / feurig). Alternate: data-theme="purple" | "blue"
+  YieldSync color themes — presets in lib/theme/color-presets.ts
+  Default: moss (green / gray / near-black). Alternates: orange | purple | blue
   Landing keeps sharp corners via explicit rounded-none; dashboard uses --radius.
 */
 :root,
-[data-theme='orange'] {
+[data-theme='moss'] {
   color-scheme: dark;
+  --background: #070807;
+  --surface: #0c0e0d;
+  --foreground: #e8ebe9;
+  --card: #121512;
+  --card-foreground: #e8ebe9;
+  --popover: #121512;
+  --popover-foreground: #e8ebe9;
+  --primary: #5c9a72;
+  --primary-foreground: #06100a;
+  --secondary: #161a17;
+  --secondary-foreground: #e8ebe9;
+  --muted: #141714;
+  --muted-foreground: #8b928c;
+  --accent: #1a1f1b;
+  --accent-foreground: #e8ebe9;
+  --destructive: #ff6060;
+  --success: #5c9a72;
+  --success-foreground: #06100a;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.11);
+  --ring: #5c9a72;
+  --chart-1: #5c9a72;
+  --chart-2: #7bb08c;
+  --chart-3: #a8c9b4;
+  --chart-4: #3d6b4e;
+  --chart-5: #1a2a20;
+  --radius: 0.75rem;
+  --sidebar: #090b0a;
+  --sidebar-foreground: #e8ebe9;
+  --sidebar-primary: #5c9a72;
+  --sidebar-primary-foreground: #06100a;
+  --sidebar-accent: #141914;
+  --sidebar-accent-foreground: #e8ebe9;
+  --sidebar-border: rgba(255, 255, 255, 0.07);
+  --sidebar-ring: #5c9a72;
+
+  --background-elevated: #121512;
+  --background-subtle: #0c0e0d;
+  --background-muted: #161a17;
+  --foreground-secondary: #e8ebe9;
+  --foreground-muted: #8b928c;
+  --foreground-disabled: #5c635e;
+  --accent-hover: #7bb08c;
+  --accent-active: #4a7d5c;
+  --accent-muted: #5c9a721f;
+  --accent-2: #161a17;
+  --accent-2-muted: #ffffff0a;
+  --success-muted: #5c9a721f;
+  --danger: #ff6060;
+  --danger-muted: #ff60601f;
+  --warning: #c4a35a;
+  --warning-muted: #c4a35a1f;
+  --border-muted: #1c201d;
+  --border-accent: #5c9a7240;
+  --glow-accent: 0 0 24px rgba(92, 154, 114, 0.35);
+  --glow-accent-lg: 0 0 48px rgba(92, 154, 114, 0.4);
+  --glow-button: 0 10px 40px -8px color-mix(in srgb, var(--primary) 85%, transparent);
+  --shadow: none;
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.55);
+}
+
+/* Meteora orange */
+[data-theme='orange'] {
   --background: #050505;
   --surface: #0e0e10;
   --foreground: #f7f4f0;
@@ -39,7 +102,6 @@
   --chart-3: #ffd28f;
   --chart-4: #c44a00;
   --chart-5: #5c2200;
-  --radius: 0.75rem;
   --sidebar: #0c0a08;
   --sidebar-foreground: #f7f4f0;
   --sidebar-primary: #ff5d00;
@@ -48,7 +110,6 @@
   --sidebar-accent-foreground: #f7f4f0;
   --sidebar-border: rgba(255, 255, 255, 0.08);
   --sidebar-ring: #ff5d00;
-
   --background-elevated: #1a1612;
   --background-subtle: #0e0e10;
   --background-muted: #1c1814;
@@ -69,6 +130,7 @@
   --border-accent: #ff5d0040;
   --glow-accent: 0 0 24px rgba(255, 93, 0, 0.35);
   --glow-accent-lg: 0 0 48px rgba(255, 93, 0, 0.45);
+  --glow-button: 0 10px 40px -8px color-mix(in srgb, var(--primary) 85%, transparent);
   --shadow: none;
   --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.55);
 }
@@ -110,6 +172,7 @@
   --border-accent: #2f6bff40;
   --glow-accent: 0 0 24px rgba(47, 107, 255, 0.35);
   --glow-accent-lg: 0 0 48px rgba(47, 107, 255, 0.45);
+  --glow-button: 0 10px 40px -8px color-mix(in srgb, var(--primary) 85%, transparent);
 }
 
 /* Saved: MegaCrypt Framer purple */
@@ -149,6 +212,7 @@
   --border-accent: #8b1aff40;
   --glow-accent: 0 0 24px rgba(139, 26, 255, 0.35);
   --glow-accent-lg: 0 0 48px rgba(139, 26, 255, 0.45);
+  --glow-button: 0 10px 40px -8px color-mix(in srgb, var(--primary) 85%, transparent);
 }
 
 @theme inline {

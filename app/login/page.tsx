@@ -385,7 +385,7 @@ export default function LoginPage() {
                         <button
                           type="submit"
                           disabled={loading || socialLoading !== null}
-                          className="flex w-full items-center justify-center bg-primary px-4 py-3 text-[14px] font-semibold text-primary-foreground shadow-[0_0_30px_-6px_rgba(255,93,0,0.85)] transition-transform hover:scale-[1.01] disabled:opacity-60"
+                          className="flex w-full items-center justify-center bg-primary px-4 py-3 text-[14px] font-semibold text-primary-foreground shadow-[var(--glow-button)] transition-transform hover:scale-[1.01] disabled:opacity-60"
                         >
                           {loading
                             ? isSignup
