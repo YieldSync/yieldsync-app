@@ -33,11 +33,21 @@ type DbRow = {
 };
 
 export type TradingWalletQuota = {
-  maxTradingWallets: number;
-  planName: string;
-  isAdmin: boolean;
-  canCreate: boolean;
-};
+  maxTradingWallets: number
+  /** Raw DB plan name: free | pro | … */
+  planName: string
+  /** UI label: Starter | Professional | … */
+  planLabel: string
+  isAdmin: boolean
+  canCreate: boolean
+}
+
+export function planDisplayName(planName: string, isAdmin = false) {
+  if (isAdmin || planName === "pro") return "Professional"
+  if (planName === "free") return "Starter"
+  if (!planName) return "Starter"
+  return planName.charAt(0).toUpperCase() + planName.slice(1)
+}
 
 function errMessage(err: unknown, fallback: string) {
   if (err instanceof Error && err.message) return err.message;
@@ -71,6 +81,7 @@ export async function getTradingWalletQuota(
     return {
       maxTradingWallets: 0,
       planName: "free",
+      planLabel: "Starter",
       isAdmin: false,
       canCreate: false,
     };
@@ -109,7 +120,8 @@ export async function getTradingWalletQuota(
   const active = count ?? 0;
   return {
     maxTradingWallets: max,
-    planName: plan?.name ?? "free",
+    planName,
+    planLabel: planDisplayName(planName, isAdmin),
     isAdmin,
     canCreate: max > 0 && active < max,
   };

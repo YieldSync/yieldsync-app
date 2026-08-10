@@ -22,8 +22,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useColorScheme } from "@/hooks/use-color-scheme"
+import { useCurrentUser } from "@/hooks/use-current-user"
 import { useSupabaseAuth } from "@/components/supabase-auth-provider"
-import { account } from "@/lib/plans"
+import { planDisplayName } from "@/lib/trading-wallets/api"
 import {
   navGroups,
   navItems,
@@ -40,6 +41,8 @@ export function Sidebar({
   onNavigate?: () => void
 }) {
   const { supabase } = useSupabaseAuth()
+  const { label, initial, email, profile } = useCurrentUser()
+  const planLabel = planDisplayName(profile?.planName ?? "free", profile?.isAdmin)
 
   async function handleSignOut() {
     try {
@@ -101,18 +104,18 @@ export function Sidebar({
               >
                 <Avatar className="size-8 rounded-lg">
                   <AvatarFallback className="rounded-lg bg-primary/15 text-xs font-semibold text-primary">
-                    {account.initials}
+                    {initial}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex min-w-0 flex-1 flex-col items-start gap-1 leading-none">
                   <span className="max-w-full truncate text-sm font-medium">
-                    {account.name}
+                    {label}
                   </span>
                   <Badge
                     variant="secondary"
                     className="h-4 rounded-full bg-primary/15 px-1.5 text-[10px] font-medium text-primary"
                   >
-                    {account.plan}
+                    {planLabel}
                   </Badge>
                 </div>
                 <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
@@ -123,13 +126,13 @@ export function Sidebar({
             <div className="flex items-center gap-3 px-2 py-2">
               <Avatar className="size-9 rounded-lg">
                 <AvatarFallback className="rounded-lg bg-primary/15 text-xs font-semibold text-primary">
-                  {account.initials}
+                  {initial}
                 </AvatarFallback>
               </Avatar>
               <div className="flex min-w-0 flex-col leading-tight">
-                <span className="truncate text-sm font-medium">{account.name}</span>
+                <span className="truncate text-sm font-medium">{label}</span>
                 <span className="truncate text-xs text-muted-foreground">
-                  {account.email}
+                  {email ?? "—"}
                 </span>
               </div>
             </div>

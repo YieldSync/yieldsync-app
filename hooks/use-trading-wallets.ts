@@ -17,6 +17,7 @@ export function useTradingWallets() {
   const [quota, setQuota] = useState<TradingWalletQuota>({
     maxTradingWallets: 0,
     planName: "free",
+    planLabel: "Starter",
     isAdmin: false,
     canCreate: false,
   })
