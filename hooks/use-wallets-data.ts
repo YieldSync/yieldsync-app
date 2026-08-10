@@ -1,28 +1,26 @@
-"use client";
+"use client"
 
-import { useCallback, useEffect, useState } from "react";
-import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { useCallback, useEffect, useState } from "react"
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/client"
 import {
   addWallet,
-  createWalletList,
   deleteWallet,
-  deleteWalletList,
   exportWalletsCsv,
-  fetchWalletLists,
   fetchWallets,
-} from "@/lib/wallets/api";
-import type { Wallet, WalletList, WalletListStatus } from "@/lib/wallets/types";
+} from "@/lib/wallets/api"
+import type { Wallet } from "@/lib/wallets/types"
 
 export function useWalletsData() {
-  const [wallets, setWallets] = useState<Wallet[]>([]);
-  const [lists, setLists] = useState<WalletList[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [wallets, setWallets] = useState<Wallet[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
     if (!isSupabaseConfigured()) {
-      setError("Supabase is not configured. Redeploy with NEXT_PUBLIC_SUPABASE_* env.")
+      setError(
+        "Supabase is not configured. Redeploy with NEXT_PUBLIC_SUPABASE_* env.",
+      )
       setLoading(false)
       return
     }
@@ -31,12 +29,10 @@ export function useWalletsData() {
     const supabase = createClient()
     const { data: auth } = await supabase.auth.getUser()
     if (!auth.user) {
-      // Session cookies can lag behind middleware — retry once via getSession
       const { data: sess } = await supabase.auth.getSession()
       if (!sess.session?.user) {
         setUserId(null)
         setWallets([])
-        setLists([])
         setError("Sign in to manage your wallets.")
         setLoading(false)
         return
@@ -47,12 +43,7 @@ export function useWalletsData() {
     }
 
     try {
-      const [w, l] = await Promise.all([
-        fetchWallets(supabase),
-        fetchWalletLists(supabase),
-      ])
-      setWallets(w)
-      setLists(l)
+      setWallets(await fetchWallets(supabase))
     } catch (err) {
       const msg =
         err instanceof Error
@@ -67,68 +58,46 @@ export function useWalletsData() {
   }, [])
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    void refresh()
+  }, [refresh])
 
   const trackWallet = useCallback(
-    async (input: { address: string; name?: string; listIds?: string[] }) => {
-      const supabase = createClient();
-      await addWallet(supabase, input);
-      await refresh();
+    async (input: { address: string; name?: string }) => {
+      const supabase = createClient()
+      await addWallet(supabase, input)
+      await refresh()
     },
     [refresh],
-  );
+  )
 
   const removeWallet = useCallback(
     async (walletId: string) => {
-      const supabase = createClient();
-      await deleteWallet(supabase, walletId);
-      await refresh();
+      const supabase = createClient()
+      await deleteWallet(supabase, walletId)
+      await refresh()
     },
     [refresh],
-  );
-
-  const addList = useCallback(
-    async (input: { name: string; status?: WalletListStatus }) => {
-      const supabase = createClient();
-      const list = await createWalletList(supabase, input);
-      await refresh();
-      return list;
-    },
-    [refresh],
-  );
-
-  const removeList = useCallback(
-    async (listId: string) => {
-      const supabase = createClient();
-      await deleteWalletList(supabase, listId);
-      await refresh();
-    },
-    [refresh],
-  );
+  )
 
   const downloadCsv = useCallback(async () => {
-    const csv = await exportWalletsCsv(wallets);
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "yieldsync-wallets.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [wallets]);
+    const csv = await exportWalletsCsv(wallets)
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "yieldsync-wallets.csv"
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [wallets])
 
   return {
     wallets,
-    lists,
     loading,
     error,
     userId,
     refresh,
     trackWallet,
     removeWallet,
-    addList,
-    removeList,
     downloadCsv,
-  };
+  }
 }
