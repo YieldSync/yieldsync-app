@@ -28,23 +28,28 @@ export function SupabaseAuthProvider({
   children: React.ReactNode;
 }) {
   const configured = isSupabaseConfigured();
-  const supabase = useMemo(
-    () => (configured ? createClient() : null),
-    [configured],
-  );
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(configured);
 
   useEffect(() => {
-    if (!supabase) {
+    if (!configured) {
       setLoading(false);
       return;
     }
 
     let cancelled = false;
+    let client: SupabaseClient;
+    try {
+      client = createClient();
+    } catch {
+      setLoading(false);
+      return;
+    }
+    setSupabase(client);
 
-    void supabase.auth.getSession().then(({ data }) => {
+    void client.auth.getSession().then(({ data }) => {
       if (cancelled) return;
       setSession(data.session);
       setUser(data.session?.user ?? null);
@@ -53,7 +58,7 @@ export function SupabaseAuthProvider({
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, next) => {
+    } = client.auth.onAuthStateChange((_event, next) => {
       setSession(next);
       setUser(next?.user ?? null);
       setLoading(false);
@@ -63,7 +68,7 @@ export function SupabaseAuthProvider({
       cancelled = true;
       subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [configured]);
 
   const value = useMemo(
     () => ({ supabase, session, user, loading, configured }),

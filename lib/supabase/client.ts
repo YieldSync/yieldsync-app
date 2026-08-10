@@ -12,12 +12,12 @@ const SUPABASE_BROWSER_KEY =
   "";
 
 function getSupabaseUrl() {
-  return SUPABASE_URL;
+  return SUPABASE_URL.trim();
 }
 
 /** New publishable key or legacy anon key */
 function getBrowserKey() {
-  return SUPABASE_BROWSER_KEY;
+  return SUPABASE_BROWSER_KEY.trim();
 }
 
 let browserClient: SupabaseClient | null = null;
@@ -31,7 +31,7 @@ export function createClient(): SupabaseClient {
   const url = getSupabaseUrl();
   const key = getBrowserKey();
 
-  if (!url || !key) {
+  if (!url || !key || !/^https?:\/\//i.test(url)) {
     throw new Error(
       "Missing NEXT_PUBLIC_SUPABASE_URL and publishable/anon key in .env.local",
     );
@@ -52,5 +52,7 @@ export function createClient(): SupabaseClient {
 }
 
 export function isSupabaseConfigured() {
-  return Boolean(getSupabaseUrl() && getBrowserKey());
+  const url = getSupabaseUrl();
+  const key = getBrowserKey();
+  return Boolean(url && key && /^https?:\/\//i.test(url));
 }
