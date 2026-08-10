@@ -25,7 +25,7 @@ export function useTradingWallets() {
 
   const refresh = useCallback(async () => {
     if (!isSupabaseConfigured()) {
-      setError("Supabase is not configured.")
+      setError("Supabase is not configured. Redeploy with NEXT_PUBLIC_SUPABASE_* env.")
       setLoading(false)
       return
     }
@@ -33,10 +33,13 @@ export function useTradingWallets() {
     const supabase = createClient()
     const { data: auth } = await supabase.auth.getUser()
     if (!auth.user) {
-      setWallets([])
-      setError("Sign in to manage trading wallets.")
-      setLoading(false)
-      return
+      const { data: sess } = await supabase.auth.getSession()
+      if (!sess.session?.user) {
+        setWallets([])
+        setError("Sign in to manage trading wallets.")
+        setLoading(false)
+        return
+      }
     }
     try {
       const [rows, q] = await Promise.all([

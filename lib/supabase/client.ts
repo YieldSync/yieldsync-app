@@ -1,17 +1,23 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+/**
+ * Direct static access so Next/Turbopack inlines NEXT_PUBLIC_* at build time.
+ * Do not wrap behind computed keys — browsers have no process.env at runtime.
+ */
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const SUPABASE_BROWSER_KEY =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  "";
+
 function getSupabaseUrl() {
-  return process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  return SUPABASE_URL;
 }
 
 /** New publishable key or legacy anon key */
 function getBrowserKey() {
-  return (
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    ""
-  );
+  return SUPABASE_BROWSER_KEY;
 }
 
 let browserClient: SupabaseClient | null = null;

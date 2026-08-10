@@ -18,7 +18,7 @@ export function useStrategies() {
 
   const refresh = useCallback(async () => {
     if (!isSupabaseConfigured()) {
-      setError("Supabase is not configured.")
+      setError("Supabase is not configured. Redeploy with NEXT_PUBLIC_SUPABASE_* env.")
       setLoading(false)
       return
     }
@@ -26,10 +26,13 @@ export function useStrategies() {
     const supabase = createClient()
     const { data: auth } = await supabase.auth.getUser()
     if (!auth.user) {
-      setStrategies([])
-      setError("Sign in to manage strategies.")
-      setLoading(false)
-      return
+      const { data: sess } = await supabase.auth.getSession()
+      if (!sess.session?.user) {
+        setStrategies([])
+        setError("Sign in to manage strategies.")
+        setLoading(false)
+        return
+      }
     }
     try {
       setStrategies(await listCopyStrategies(supabase))

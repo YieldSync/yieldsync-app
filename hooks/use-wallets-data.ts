@@ -22,43 +22,49 @@ export function useWalletsData() {
 
   const refresh = useCallback(async () => {
     if (!isSupabaseConfigured()) {
-      setError("Sign in required.");
-      setLoading(false);
-      return;
+      setError("Supabase is not configured. Redeploy with NEXT_PUBLIC_SUPABASE_* env.")
+      setLoading(false)
+      return
     }
 
-    setError(null);
-    const supabase = createClient();
-    const { data: auth } = await supabase.auth.getUser();
+    setError(null)
+    const supabase = createClient()
+    const { data: auth } = await supabase.auth.getUser()
     if (!auth.user) {
-      setUserId(null);
-      setWallets([]);
-      setLists([]);
-      setError("Sign in to manage your wallets.");
-      setLoading(false);
-      return;
+      // Session cookies can lag behind middleware — retry once via getSession
+      const { data: sess } = await supabase.auth.getSession()
+      if (!sess.session?.user) {
+        setUserId(null)
+        setWallets([])
+        setLists([])
+        setError("Sign in to manage your wallets.")
+        setLoading(false)
+        return
+      }
+      setUserId(sess.session.user.id)
+    } else {
+      setUserId(auth.user.id)
     }
 
-    setUserId(auth.user.id);
     try {
       const [w, l] = await Promise.all([
         fetchWallets(supabase),
         fetchWalletLists(supabase),
-      ]);
-      setWallets(w);
-      setLists(l);
+      ])
+      setWallets(w)
+      setLists(l)
     } catch (err) {
       const msg =
         err instanceof Error
           ? err.message
           : typeof err === "object" && err && "message" in err
             ? String((err as { message: unknown }).message)
-            : "Failed to load wallets";
-      setError(msg);
+            : "Failed to load wallets"
+      setError(msg)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, []);
+  }, [])
 
   useEffect(() => {
     void refresh();

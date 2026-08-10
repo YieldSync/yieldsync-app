@@ -21,7 +21,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useRouter } from "next/navigation"
 import { useColorScheme } from "@/hooks/use-color-scheme"
 import { useSupabaseAuth } from "@/components/supabase-auth-provider"
 import { account } from "@/lib/plans"
@@ -40,13 +39,16 @@ export function Sidebar({
   active: SectionId
   onNavigate?: () => void
 }) {
-  const router = useRouter()
   const { supabase } = useSupabaseAuth()
 
   async function handleSignOut() {
-    if (supabase) await supabase.auth.signOut()
-    router.replace("/login")
-    router.refresh()
+    try {
+      if (supabase) await supabase.auth.signOut()
+    } catch {
+      // fall through to server sign-out
+    }
+    // Always clear cookies server-side — client env/session can be missing
+    window.location.assign("/auth/signout")
   }
 
   const { scheme, toggle } = useColorScheme()

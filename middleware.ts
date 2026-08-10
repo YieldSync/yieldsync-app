@@ -60,8 +60,12 @@ export async function middleware(request: NextRequest) {
     return copyCookies(response, redirect);
   }
 
-  // Logged-in users don't need auth pages
-  if (user && (path === "/login" || path === "/signup")) {
+  // Logged-in users don't need auth pages (except while signing out)
+  if (
+    user &&
+    (path === "/login" || path === "/signup") &&
+    !path.startsWith("/auth/signout")
+  ) {
     const next = request.nextUrl.searchParams.get("next");
     const dest =
       next && next.startsWith("/") && !next.startsWith("//")
@@ -82,5 +86,6 @@ export const config = {
     "/login",
     "/signup",
     "/auth/callback",
+    "/auth/signout",
   ],
 };
