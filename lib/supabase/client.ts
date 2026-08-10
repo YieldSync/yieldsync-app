@@ -1,24 +1,10 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
-
-/**
- * Direct static access so Next/Turbopack inlines NEXT_PUBLIC_* at build time.
- * Do not wrap behind computed keys — browsers have no process.env at runtime.
- */
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-const SUPABASE_BROWSER_KEY =
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  "";
-
-function getSupabaseUrl() {
-  return SUPABASE_URL.trim();
-}
-
-/** New publishable key or legacy anon key */
-function getBrowserKey() {
-  return SUPABASE_BROWSER_KEY.trim();
-}
+import {
+  getSupabaseBrowserKey,
+  getSupabaseUrl,
+  isValidSupabaseUrl,
+} from "@/lib/supabase/env";
 
 let browserClient: SupabaseClient | null = null;
 
@@ -29,9 +15,9 @@ let browserClient: SupabaseClient | null = null;
  */
 export function createClient(): SupabaseClient {
   const url = getSupabaseUrl();
-  const key = getBrowserKey();
+  const key = getSupabaseBrowserKey();
 
-  if (!url || !key || !/^https?:\/\//i.test(url)) {
+  if (!isValidSupabaseUrl(url) || !key) {
     throw new Error(
       "Missing NEXT_PUBLIC_SUPABASE_URL and publishable/anon key in .env.local",
     );
@@ -52,7 +38,5 @@ export function createClient(): SupabaseClient {
 }
 
 export function isSupabaseConfigured() {
-  const url = getSupabaseUrl();
-  const key = getBrowserKey();
-  return Boolean(url && key && /^https?:\/\//i.test(url));
+  return isValidSupabaseUrl(getSupabaseUrl()) && Boolean(getSupabaseBrowserKey());
 }

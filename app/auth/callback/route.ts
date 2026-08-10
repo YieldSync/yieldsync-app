@@ -1,18 +1,11 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-
-function getSupabaseUrl() {
-  return process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-}
-
-function getBrowserKey() {
-  return (
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    ""
-  );
-}
+import {
+  getSupabaseBrowserKey,
+  getSupabaseUrl,
+  isValidSupabaseUrl,
+} from "@/lib/supabase/env";
 
 function safeNext(raw: string | null) {
   if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/dashboard";
@@ -33,8 +26,8 @@ export async function GET(request: Request) {
   }
 
   const url = getSupabaseUrl();
-  const key = getBrowserKey();
-  if (!url || !key) {
+  const key = getSupabaseBrowserKey();
+  if (!isValidSupabaseUrl(url) || !key) {
     return NextResponse.redirect(`${origin}/login?error=config`);
   }
 

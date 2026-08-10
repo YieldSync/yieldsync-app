@@ -1,26 +1,19 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
-
-function getSupabaseUrl() {
-  return process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""
-}
-
-function getBrowserKey() {
-  return (
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    ""
-  )
-}
+import {
+  getSupabaseBrowserKey,
+  getSupabaseUrl,
+  isValidSupabaseUrl,
+} from "@/lib/supabase/env"
 
 /** Server-side sign-out — clears auth cookies even if the client bundle lacks env. */
 export async function POST(request: Request) {
   const url = getSupabaseUrl()
-  const key = getBrowserKey()
+  const key = getSupabaseBrowserKey()
   const cookieStore = await cookies()
 
-  if (url && key) {
+  if (isValidSupabaseUrl(url) && key) {
     const supabase = createServerClient(url, key, {
       cookies: {
         getAll() {
@@ -35,7 +28,6 @@ export async function POST(request: Request) {
     })
     await supabase.auth.signOut()
   } else {
-    // Best-effort clear of known sb cookies if env missing
     cookieStore.getAll().forEach(({ name }) => {
       if (name.startsWith("sb-") || name.includes("supabase")) {
         cookieStore.set(name, "", { path: "/", maxAge: 0 })

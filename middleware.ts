@@ -1,81 +1,73 @@
-import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
-
-function getSupabaseUrl() {
-  return process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-}
-
-function getBrowserKey() {
-  return (
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    ""
-  );
-}
+import { createServerClient } from "@supabase/ssr"
+import { NextResponse, type NextRequest } from "next/server"
+import {
+  getSupabaseBrowserKey,
+  getSupabaseUrl,
+  isValidSupabaseUrl,
+} from "@/lib/supabase/env"
 
 function copyCookies(from: NextResponse, to: NextResponse) {
   from.cookies.getAll().forEach((cookie) => {
-    to.cookies.set(cookie.name, cookie.value);
-  });
-  return to;
+    to.cookies.set(cookie.name, cookie.value)
+  })
+  return to
 }
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  let response = NextResponse.next({ request })
 
-  const url = getSupabaseUrl();
-  const key = getBrowserKey();
-  if (!url || !key) return response;
+  const url = getSupabaseUrl()
+  const key = getSupabaseBrowserKey()
 
-  const supabase = createServerClient(url, key, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
+  // Never throw from middleware — bad env must not 500 the whole site.
+  if (!isValidSupabaseUrl(url) || !key) return response
+
+  try {
+    const supabase = createServerClient(url, key, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value)
+          })
+          response = NextResponse.next({ request })
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options)
+          })
+        },
       },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => {
-          request.cookies.set(name, value);
-        });
-        response = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) => {
-          // Persist refreshed session cookies on the response
-          response.cookies.set(name, value, options);
-        });
-      },
-    },
-  });
+    })
 
-  // Refreshes session cookies when present (required for SSR auth)
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-  const path = request.nextUrl.pathname;
+    const path = request.nextUrl.pathname
 
-  // Guests cannot open the dashboard
-  if (!user && (path === "/dashboard" || path.startsWith("/dashboard/"))) {
-    const login = new URL("/login", request.url);
-    login.searchParams.set("next", path);
-    const redirect = NextResponse.redirect(login);
-    return copyCookies(response, redirect);
+    if (!user && (path === "/dashboard" || path.startsWith("/dashboard/"))) {
+      const login = new URL("/login", request.url)
+      login.searchParams.set("next", path)
+      return copyCookies(response, NextResponse.redirect(login))
+    }
+
+    if (user && (path === "/login" || path === "/signup")) {
+      const next = request.nextUrl.searchParams.get("next")
+      const dest =
+        next && next.startsWith("/") && !next.startsWith("//")
+          ? next
+          : "/dashboard"
+      return copyCookies(
+        response,
+        NextResponse.redirect(new URL(dest, request.url)),
+      )
+    }
+
+    return response
+  } catch {
+    return response
   }
-
-  // Logged-in users don't need auth pages (except while signing out)
-  if (
-    user &&
-    (path === "/login" || path === "/signup") &&
-    !path.startsWith("/auth/signout")
-  ) {
-    const next = request.nextUrl.searchParams.get("next");
-    const dest =
-      next && next.startsWith("/") && !next.startsWith("//")
-        ? next
-        : "/dashboard";
-    const redirect = NextResponse.redirect(new URL(dest, request.url));
-    return copyCookies(response, redirect);
-  }
-
-  return response;
 }
 
 export const config = {
@@ -88,4 +80,4 @@ export const config = {
     "/auth/callback",
     "/auth/signout",
   ],
-};
+}
