@@ -1,6 +1,24 @@
+"use client"
+
 import { Slider as SliderPrimitive } from "@base-ui/react/slider"
 
 import { cn } from "@/lib/utils"
+
+function toValues(
+  value: number | readonly number[] | undefined,
+  defaultValue: number | readonly number[] | undefined,
+  min: number,
+): number[] {
+  if (typeof value === "number" && Number.isFinite(value)) return [value]
+  if (Array.isArray(value) && value.length > 0) return [...value]
+  if (typeof defaultValue === "number" && Number.isFinite(defaultValue)) {
+    return [defaultValue]
+  }
+  if (Array.isArray(defaultValue) && defaultValue.length > 0) {
+    return [...defaultValue]
+  }
+  return [min]
+}
 
 function Slider({
   className,
@@ -10,11 +28,7 @@ function Slider({
   max = 100,
   ...props
 }: SliderPrimitive.Root.Props) {
-  const _values = Array.isArray(value)
-    ? value
-    : Array.isArray(defaultValue)
-      ? defaultValue
-      : [min, max]
+  const _values = toValues(value as number | number[] | undefined, defaultValue as number | number[] | undefined, min)
 
   return (
     <SliderPrimitive.Root
