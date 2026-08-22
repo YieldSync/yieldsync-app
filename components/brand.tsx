@@ -4,11 +4,11 @@ import { cn } from '@/lib/utils'
 export function LogoMark({ className }: { className?: string }) {
   return (
     <Image
-      src="/meteor.png"
+      src="/icon.svg"
       alt=""
       width={28}
       height={28}
-      className={cn('h-6 w-6 rounded-sm object-contain', className)}
+      className={cn('h-6 w-6 shrink-0 rounded-[6px] object-contain', className)}
       priority
     />
   )

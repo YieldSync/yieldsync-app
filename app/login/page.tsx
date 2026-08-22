@@ -18,6 +18,12 @@ import {
   LAUNCHING_SOON_TITLE,
   SIGNUPS_ENABLED,
 } from "@/lib/product";
+import { MARKETING_ORIGIN } from "@/lib/site";
+
+function homeHref() {
+  if (typeof window === "undefined") return "/"
+  return window.location.hostname === "app.yieldsync.io" ? MARKETING_ORIGIN : "/"
+}
 
 function safeNextPath(raw: string | null | undefined) {
   if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/dashboard";
@@ -275,9 +281,9 @@ export default function LoginPage() {
           amount={0.2}
           grain={0.032}
         />
-        <div className="absolute inset-0 bg-[radial-gradient(80%_70%_at_40%_40%,rgba(5,5,5,0.05)_0%,rgba(5,5,5,0.45)_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(80%_70%_at_40%_40%,rgba(5,5,5,0.05)_0%,rgba(5,5,5,0.45)_100%)] light:bg-[radial-gradient(80%_70%_at_40%_40%,rgba(255,255,255,0.45)_0%,rgba(243,247,244,0.7)_100%)]" />
         <div className="absolute inset-x-0 bottom-0 hidden p-8 lg:block">
-          <Link href="/" className="inline-flex opacity-90 transition-opacity hover:opacity-100">
+          <Link href={homeHref()} className="inline-flex opacity-90 transition-opacity hover:opacity-100">
             <Wordmark />
           </Link>
           <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-foreground/75">
@@ -290,7 +296,7 @@ export default function LoginPage() {
       {/* Right — gray card panel */}
       <div className="flex flex-1 flex-col bg-background-subtle lg:min-h-screen">
         <div className="flex items-center justify-between border-b border-border px-5 py-4 sm:px-8 lg:hidden">
-          <Link href="/">
+          <Link href={homeHref()}>
             <Wordmark />
           </Link>
         </div>

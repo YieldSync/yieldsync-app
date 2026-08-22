@@ -4,6 +4,7 @@
 @import "../styles/landing-tokens.css";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant light (&:is(.light *));
 
 /*
   YieldSync color themes — presets in lib/theme/color-presets.ts

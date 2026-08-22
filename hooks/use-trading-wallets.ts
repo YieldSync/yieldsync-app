@@ -66,7 +66,7 @@ export function useTradingWallets() {
       await upsertTradingWallet(supabase, {
         address: input.address,
         label: input.label,
-        source: "imported",
+        source: "created",
         reactivate: true,
       })
       await refresh()

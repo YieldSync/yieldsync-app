@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils'
 import {
   DEFAULT_THEME,
   getThemePreset,
+  liquidFallbackForScheme,
+  liquidStopsForScheme,
   type ThemeId,
 } from '@/lib/theme/color-presets'
 import { useTheme } from '@/components/theme-provider'
@@ -171,12 +173,14 @@ export function LiquidGradient({
   grain,
   interactive = false,
 }: LiquidGradientProps) {
-  const { activePreset } = useTheme()
+  const { activePreset, scheme } = useTheme()
   const activePalette: ThemeId = palette ?? activePreset.id
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const mouseRef = useRef<{ x: number; y: number } | null>(null)
   const preset = palette ? getThemePreset(palette) : activePreset
   const motion = preset.motion
+  const liquid = liquidStopsForScheme(preset.liquid, scheme)
+  const fallbackClass = liquidFallbackForScheme(preset, scheme)
 
   const sSeed = seed ?? motion.seed
   const sSpeed = speed ?? motion.speed
@@ -185,11 +189,12 @@ export function LiquidGradient({
   const sFrequency = frequency ?? motion.frequency
   const sDefinition = definition ?? motion.definition
   const sBands = bands ?? motion.bands
-  const sAmount = amount ?? motion.amount
-  const sGrain = grain ?? motion.grain
+  // Soften ribbons in light mode so the page stays mostly white
+  const sAmount = (amount ?? motion.amount) * (scheme === 'light' ? 0.55 : 1)
+  const sGrain = (grain ?? motion.grain) * (scheme === 'light' ? 0.45 : 1)
 
-  const stopsRef = useRef(preset.liquid)
-  stopsRef.current = preset.liquid
+  const stopsRef = useRef(liquid)
+  stopsRef.current = liquid
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -362,6 +367,7 @@ export function LiquidGradient({
     }
   }, [
     activePalette,
+    scheme,
     sSeed,
     sSpeed,
     sScale,
@@ -376,12 +382,12 @@ export function LiquidGradient({
 
   return (
     <canvas
-      key={`${preset.primary}-${preset.chart.join('')}`}
+      key={`${preset.primary}-${scheme}-${preset.chart.join('')}`}
       ref={canvasRef}
       aria-hidden="true"
       className={cn(
         'absolute inset-0 h-full w-full pointer-events-none',
-        preset.liquidFallback,
+        fallbackClass,
         className,
       )}
     />

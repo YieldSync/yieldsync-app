@@ -30,12 +30,13 @@ export const metadata: Metadata = {
     'Track Meteora LP creators in real time, see who\'s actually profitable, and copy their trades automatically. Built for Solana traders.',
   icons: {
     icon: [
-      { url: '/meteor.png', type: 'image/png' },
-      { url: '/icon.png', type: 'image/png' },
-      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/ys-wave-icon.svg', type: 'image/svg+xml' },
+      { url: '/ys-wave-512.png', type: 'image/png', sizes: '512x512' },
+      { url: '/ys-wave-32.png', type: 'image/png', sizes: '32x32' },
+      { url: '/favicon.ico', sizes: '48x48', type: 'image/x-icon' },
     ],
-    shortcut: '/meteor.png',
-    apple: '/apple-icon.png',
+    shortcut: '/ys-wave-32.png',
+    apple: [{ url: '/ys-wave-apple.png', sizes: '180x180', type: 'image/png' }],
   },
   openGraph: {
     type: 'website',

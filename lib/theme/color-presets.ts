@@ -31,6 +31,46 @@ export type LiquidStops = {
   light2: readonly [number, number, number]
 }
 
+function mix01(
+  a: readonly [number, number, number],
+  b: readonly [number, number, number],
+  t: number,
+): [number, number, number] {
+  return [
+    a[0] + (b[0] - a[0]) * t,
+    a[1] + (b[1] - a[1]) * t,
+    a[2] + (b[2] - a[2]) * t,
+  ]
+}
+
+/**
+ * Light scheme: invert the fluid — mostly white / soft mint instead of near-black.
+ */
+export function liquidStopsForScheme(
+  stops: LiquidStops,
+  scheme: 'dark' | 'light',
+): LiquidStops {
+  if (scheme === 'dark') return stops
+  const white: [number, number, number] = [0.99, 0.995, 0.99]
+  const mist: [number, number, number] = [0.94, 0.97, 0.95]
+  return {
+    dark1: mix01(white, stops.light2, 0.06),
+    dark2: mix01(mist, stops.primary, 0.1),
+    light1: mix01(stops.light2, stops.primary, 0.28),
+    primary: mix01(stops.primary, white, 0.42),
+    light2: mix01(white, stops.light2, 0.22),
+  }
+}
+
+export function liquidFallbackForScheme(
+  preset: ThemePreset,
+  scheme: 'dark' | 'light',
+): string {
+  if (scheme === 'dark') return preset.liquidFallback
+  const soft = preset.chart[2] ?? preset.primaryHover
+  return `bg-[radial-gradient(130%_110%_at_30%_45%,${soft}_0%,#eef6f0_48%,#ffffff_100%)]`
+}
+
 export type ThemePreset = {
   id: ThemeId
   label: string

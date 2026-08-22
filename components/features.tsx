@@ -1,15 +1,23 @@
 import {
-  Activity,
-  Boxes,
-  Fuel,
-  KeyRound,
-  ShieldCheck,
-  Sparkles,
+  LayoutGrid,
+  MessageCircle,
+  Repeat,
+  Settings,
+  TrendingUp,
+  Wallet,
 } from 'lucide-react'
 import { SectionShell } from '@/components/brand'
 import content from '@/text-content/features.json'
 
-const ICONS = [KeyRound, Activity, Sparkles, Boxes, Fuel, ShieldCheck] as const
+/** Same icons as the dashboard mockup sidebar */
+const ICONS = [
+  LayoutGrid,
+  Wallet,
+  Repeat,
+  TrendingUp,
+  MessageCircle,
+  Settings,
+] as const
 
 export function Features() {
   return (
@@ -28,20 +36,20 @@ export function Features() {
 
       <ul className="mc-bleed-t grid sm:grid-cols-2 lg:grid-cols-3">
         {content.features.map((feature, i) => {
-          const Icon = ICONS[i] ?? Sparkles
+          const Icon = ICONS[i] ?? LayoutGrid
           const smRight = i % 2 === 0
           const lgRight = i % 3 !== 2
           return (
             <li
               key={feature.title}
               className={
-                'group border-b border-border p-8 transition-colors hover:bg-white/[0.03]' +
+                'group border-b border-border p-8 transition-colors hover:bg-white/[0.03] light:hover:bg-black/[0.02]' +
                 (smRight ? ' sm:border-r' : '') +
                 (lgRight ? ' lg:border-r' : ' lg:border-r-0')
               }
             >
               <span className="flex size-10 items-center justify-center rounded-lg border border-primary/35 bg-primary/12 text-primary">
-                <Icon className="size-5" />
+                <Icon className="size-5" strokeWidth={1.75} />
               </span>
               <h3 className="mt-14 text-[17px] font-semibold tracking-[-0.01em]">
                 {feature.title}

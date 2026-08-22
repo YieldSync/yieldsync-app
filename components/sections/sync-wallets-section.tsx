@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import Link from "next/link"
 import {
   Download,
   MoreHorizontal,
@@ -9,6 +10,7 @@ import {
   Trash2,
   Wallet,
   Activity,
+  ExternalLink,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -59,8 +61,8 @@ import {
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import { SectionHeader, StatCard, StatusBadge } from "@/components/dashboard/primitives"
+import { WalletLink } from "@/components/wallet/wallet-link"
 import { useWalletsData } from "@/hooks/use-wallets-data"
-import { shortAddress } from "@/lib/data"
 
 export function SyncWalletsSection() {
   const {
@@ -228,7 +230,7 @@ export function SyncWalletsSection() {
                   filtered.map((wallet) => (
                     <TableRow key={wallet.id}>
                       <TableCell className="pl-5 font-medium tabular">
-                        {shortAddress(wallet.address)}
+                        <WalletLink address={wallet.address} />
                       </TableCell>
                       <TableCell className="font-medium">
                         {wallet.name || "—"}
@@ -253,8 +255,16 @@ export function SyncWalletsSection() {
                               </Button>
                             }
                           />
-                          <DropdownMenuContent align="end" className="w-40">
+                          <DropdownMenuContent align="end" className="w-44">
                             <DropdownMenuGroup>
+                              <DropdownMenuItem
+                                render={
+                                  <Link href={`/wallet/${wallet.address}`} />
+                                }
+                              >
+                                <ExternalLink />
+                                Open detail
+                              </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() =>
                                   void navigator.clipboard.writeText(wallet.address)

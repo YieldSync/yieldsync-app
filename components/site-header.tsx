@@ -6,6 +6,7 @@ import { Menu, X } from 'lucide-react'
 import { Wordmark } from '@/components/brand'
 import { useCurrentUser } from '@/hooks/use-current-user'
 import { SIGNUPS_ENABLED } from '@/lib/product'
+import { publicAppHref } from '@/lib/site'
 import { cn } from '@/lib/utils'
 
 const NAV = [
@@ -91,7 +92,7 @@ export function SiteHeader() {
         <div className="flex items-center gap-2 sm:gap-3">
           {!loading && !signedIn ? (
             <Link
-              href="/login"
+              href={publicAppHref('/login')}
               className="hidden text-[14px] font-medium text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
             >
               Sign in
@@ -101,10 +102,10 @@ export function SiteHeader() {
           <Link
             href={
               signedIn
-                ? '/dashboard'
+                ? publicAppHref('/dashboard')
                 : SIGNUPS_ENABLED
-                  ? '/login#signup'
-                  : '/login'
+                  ? publicAppHref('/login#signup')
+                  : publicAppHref('/login')
             }
             className="hidden rounded-none bg-primary px-5 py-2.5 text-[14px] font-semibold text-primary-foreground shadow-[var(--glow-button)] transition-transform hover:scale-[1.03] sm:inline-flex"
           >
@@ -156,7 +157,7 @@ export function SiteHeader() {
 
           {!loading && !signedIn ? (
             <Link
-              href="/login"
+              href={publicAppHref('/login')}
               onClick={() => setOpen(false)}
               className="mt-4 rounded-none border border-border px-4 py-3 text-center text-[14px] font-semibold"
             >
@@ -167,10 +168,10 @@ export function SiteHeader() {
           <Link
             href={
               signedIn
-                ? '/dashboard'
+                ? publicAppHref('/dashboard')
                 : SIGNUPS_ENABLED
-                  ? '/login#signup'
-                  : '/login'
+                  ? publicAppHref('/login#signup')
+                  : publicAppHref('/login')
             }
             onClick={() => setOpen(false)}
             className="mt-3 rounded-none bg-primary px-6 py-3 text-center text-[15px] font-semibold text-primary-foreground"

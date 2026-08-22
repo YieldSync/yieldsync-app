@@ -6,6 +6,7 @@ import {
   LAUNCHING_SOON_TITLE,
   SIGNUPS_ENABLED,
 } from '@/lib/product'
+import { publicAppHref } from '@/lib/site'
 
 export function Hero() {
   return (
@@ -24,7 +25,8 @@ export function Hero() {
           amount={0.2}
           grain={0.032}
         />
-        <div className="absolute inset-0 bg-[radial-gradient(90%_70%_at_50%_20%,rgba(5,5,5,0.1)_0%,rgba(5,5,5,0.35)_100%)]" />
+        {/* Dark: soft black vignette · Light: white wash so fluid stays pale mint */}
+        <div className="absolute inset-0 bg-[radial-gradient(90%_70%_at_50%_20%,rgba(5,5,5,0.1)_0%,rgba(5,5,5,0.35)_100%)] light:bg-[radial-gradient(90%_70%_at_50%_20%,rgba(255,255,255,0.55)_0%,rgba(243,247,244,0.72)_100%)]" />
       </div>
 
       <div className="relative grid w-full grid-cols-[minmax(0,1fr)_minmax(0,1280px)_minmax(0,1fr)]">
@@ -68,7 +70,7 @@ export function Hero() {
             >
               {SIGNUPS_ENABLED ? (
                 <a
-                  href="/login#signup"
+                  href={publicAppHref('/login#signup')}
                   className="inline-flex rounded-none bg-primary px-7 py-3 text-[15px] font-semibold text-primary-foreground shadow-[var(--glow-button)] transition-transform hover:scale-[1.03]"
                 >
                   Get Started
@@ -76,12 +78,12 @@ export function Hero() {
               ) : (
                 <>
                   <a
-                    href="/login"
+                    href={publicAppHref('/login')}
                     className="inline-flex rounded-none bg-primary px-7 py-3 text-[15px] font-semibold text-primary-foreground shadow-[var(--glow-button)] transition-transform hover:scale-[1.03]"
                   >
                     Sign in
                   </a>
-                  <span className="inline-flex rounded-none border border-border bg-background/40 px-5 py-3 text-[14px] font-medium text-muted-foreground backdrop-blur-sm">
+                  <span className="inline-flex rounded-none border border-border bg-background/40 px-5 py-3 text-[14px] font-medium text-muted-foreground backdrop-blur-sm light:bg-white/70">
                     Public access · launching soon
                   </span>
                 </>
@@ -96,21 +98,20 @@ export function Hero() {
             Mockup itself stays fully solid on top.
           */}
           <div
-            className="relative px-4 py-6 sm:px-7 sm:py-8 lg:px-10 lg:py-10"
-            style={{
-              background:
-                'linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(90,40,10,0.06) 50%, rgba(20,10,4,0.08) 100%)',
-              backdropFilter: 'blur(28px) saturate(1.4)',
-              WebkitBackdropFilter: 'blur(28px) saturate(1.4)',
-              boxShadow:
-                'inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -1px 0 rgba(255,255,255,0.03)',
-            }}
+            className="relative bg-[linear-gradient(180deg,rgba(255,255,255,0.06)_0%,rgba(90,40,10,0.06)_50%,rgba(20,10,4,0.08)_100%)] px-4 py-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.14),inset_0_-1px_0_rgba(255,255,255,0.03)] backdrop-blur-[28px] backdrop-saturate-150 sm:px-7 sm:py-8 lg:px-10 lg:py-10 light:bg-[linear-gradient(180deg,rgba(255,255,255,0.72)_0%,rgba(238,246,240,0.55)_100%)] light:shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]"
           >
             <div
-              className="pointer-events-none absolute inset-0"
+              className="pointer-events-none absolute inset-0 light:hidden"
               style={{
                 background:
                   'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 35%, transparent 70%, color-mix(in srgb, var(--primary) 8%, transparent) 100%)',
+              }}
+            />
+            <div
+              className="pointer-events-none absolute inset-0 hidden light:block"
+              style={{
+                background:
+                  'linear-gradient(135deg, rgba(255,255,255,0.65) 0%, transparent 40%, color-mix(in srgb, var(--primary) 6%, transparent) 100%)',
               }}
             />
 

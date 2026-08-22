@@ -2,9 +2,10 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { withMigrationHint } from "@/lib/supabase/errors"
 
 const TABLE = "copy_trading_strategies"
-const MIGRATION = "20260810160000_strategy_execution_fields.sql"
+const MIGRATION = "20260811200000_strategy_status.sql"
 
 export type SizingMode = "percentage" | "fixed"
+export type StrategyStatus = "draft" | "active" | "paused"
 
 export type CopyStrategyRow = {
   id: string
@@ -14,9 +15,10 @@ export type CopyStrategyRow = {
   source_name: string | null
   execution_wallet: string
   execution_label: string | null
+  privy_wallet_id: string | null
   copy_pct: number
   min_size_sol: number
-  max_size_sol: number
+  max_size_sol: number | null
   max_positions: number
   sizing_mode: SizingMode
   fixed_size_sol: number | null
@@ -28,6 +30,19 @@ export type CopyStrategyRow = {
   token_blacklist: string[] | null
   auto_sell: boolean
   auto_sell_retries: number
+  min_pool_age_minutes: number | null
+  max_pool_age_minutes: number | null
+  skip_blacklisted: boolean
+  require_freeze_authority_disabled: boolean
+  require_verified: boolean
+  min_holders: number | null
+  min_market_cap_usd: number | null
+  max_market_cap_usd: number | null
+  min_tvl_usd: number | null
+  sol_side_only: boolean
+  include_usdc_pools: boolean
+  score_trades: boolean
+  status: string | null
   enabled: boolean
   created_at: string
   updated_at: string
@@ -39,11 +54,14 @@ export type CopyStrategyInput = {
   sourceName?: string | null
   executionWallet: string
   executionLabel?: string | null
+  /** Privy wallet id for backend signing — set when strategy starts. */
+  privyWalletId?: string | null
   sizingMode?: SizingMode
   copyPct: number
   fixedSizeSol?: number | null
   minSizeSol: number
-  maxSizeSol: number
+  /** null = no per-position SOL cap */
+  maxSizeSol?: number | null
   maxPositions?: number
   slippagePct: number
   priorityFeeSol?: number
@@ -53,6 +71,20 @@ export type CopyStrategyInput = {
   tokenBlacklist?: string[]
   autoSell?: boolean
   autoSellRetries?: number
+  minPoolAgeMinutes?: number | null
+  maxPoolAgeMinutes?: number | null
+  skipBlacklisted?: boolean
+  requireFreezeAuthorityDisabled?: boolean
+  requireVerified?: boolean
+  minHolders?: number | null
+  minMarketCapUsd?: number | null
+  maxMarketCapUsd?: number | null
+  minTvlUsd?: number | null
+  solSideOnly?: boolean
+  includeUsdcPools?: boolean
+  scoreTrades?: boolean
+  /** draft | active | paused — drives enabled for the backend. */
+  status?: StrategyStatus
   enabled?: boolean
 }
 
@@ -70,6 +102,12 @@ function num(v: unknown, fallback = 0) {
   return Number.isFinite(n) ? n : fallback
 }
 
+function optNum(v: unknown): number | null {
+  if (v == null || v === "") return null
+  const n = typeof v === "number" ? v : Number(v)
+  return Number.isFinite(n) ? n : null
+}
+
 function bool(v: unknown, fallback = false) {
   if (typeof v === "boolean") return v
   if (v == null) return fallback
@@ -83,7 +121,30 @@ function strArr(v: unknown): string[] {
   return []
 }
 
+function optInt(v: number | null | undefined): number | null {
+  if (v == null) return null
+  if (!Number.isFinite(v)) return null
+  return Math.max(0, Math.round(v))
+}
+
+function optUsd(v: number | null | undefined): number | null {
+  if (v == null) return null
+  if (!Number.isFinite(v) || v < 0) return null
+  return v
+}
+
+function normalizeStatus(
+  status: unknown,
+  enabled: boolean,
+): StrategyStatus {
+  const s = typeof status === "string" ? status.toLowerCase() : ""
+  if (s === "draft" || s === "active" || s === "paused") return s
+  return enabled ? "active" : "paused"
+}
+
 export function mapCopyStrategy(row: CopyStrategyRow) {
+  const enabled = Boolean(row.enabled)
+  const status = normalizeStatus(row.status, enabled)
   return {
     id: row.id,
     name: row.name,
@@ -91,12 +152,13 @@ export function mapCopyStrategy(row: CopyStrategyRow) {
     sourceName: row.source_name,
     executionWallet: row.execution_wallet,
     executionLabel: row.execution_label,
+    privyWalletId: row.privy_wallet_id,
     sizingMode: (row.sizing_mode === "fixed" ? "fixed" : "percentage") as SizingMode,
     copyPct: num(row.copy_pct, 25),
     fixedSizeSol: row.fixed_size_sol == null ? null : num(row.fixed_size_sol),
     minSizeSol: num(row.min_size_sol, 0.1),
-    maxSizeSol: num(row.max_size_sol, 2),
-    maxPositions: num(row.max_positions, 5),
+    maxSizeSol: row.max_size_sol == null ? null : num(row.max_size_sol),
+    maxPositions: num(row.max_positions, 10),
     slippagePct: num(row.slippage_pct, 1.5),
     priorityFeeSol: num(row.priority_fee_sol, 0.0005),
     stopLossPct: row.stop_loss_pct == null ? null : num(row.stop_loss_pct),
@@ -105,7 +167,23 @@ export function mapCopyStrategy(row: CopyStrategyRow) {
     tokenBlacklist: strArr(row.token_blacklist),
     autoSell: bool(row.auto_sell, true),
     autoSellRetries: num(row.auto_sell_retries, 3),
-    enabled: Boolean(row.enabled),
+    minPoolAgeMinutes: optNum(row.min_pool_age_minutes),
+    maxPoolAgeMinutes: optNum(row.max_pool_age_minutes),
+    skipBlacklisted: bool(row.skip_blacklisted, true),
+    requireFreezeAuthorityDisabled: bool(
+      row.require_freeze_authority_disabled,
+      true,
+    ),
+    requireVerified: bool(row.require_verified, false),
+    minHolders: optNum(row.min_holders),
+    minMarketCapUsd: optNum(row.min_market_cap_usd),
+    maxMarketCapUsd: optNum(row.max_market_cap_usd),
+    minTvlUsd: optNum(row.min_tvl_usd),
+    solSideOnly: bool(row.sol_side_only, true),
+    includeUsdcPools: bool(row.include_usdc_pools, false),
+    scoreTrades: bool(row.score_trades, false),
+    status,
+    enabled: status === "active",
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
@@ -113,9 +191,16 @@ export function mapCopyStrategy(row: CopyStrategyRow) {
 
 export type CopyStrategy = ReturnType<typeof mapCopyStrategy>
 
-function toInsert(userId: string, input: CopyStrategyInput) {
-  return {
-    user_id: userId,
+function resolveStatus(input: CopyStrategyInput): StrategyStatus {
+  if (input.status === "draft" || input.status === "active" || input.status === "paused") {
+    return input.status
+  }
+  return input.enabled === false ? "draft" : "active"
+}
+
+function toRowPayload(input: CopyStrategyInput) {
+  const status = resolveStatus(input)
+  const row: Record<string, unknown> = {
     name: input.name.trim().slice(0, 48) || "Strategy",
     source_wallet: input.sourceWallet.trim(),
     source_name: input.sourceName?.trim() || null,
@@ -125,8 +210,11 @@ function toInsert(userId: string, input: CopyStrategyInput) {
     copy_pct: Math.min(100, Math.max(1, Math.round(input.copyPct))),
     fixed_size_sol: input.fixedSizeSol ?? null,
     min_size_sol: input.minSizeSol,
-    max_size_sol: input.maxSizeSol,
-    max_positions: input.maxPositions ?? 5,
+    max_size_sol: optUsd(input.maxSizeSol),
+    max_positions: Math.min(
+      100,
+      Math.max(1, Math.round(input.maxPositions ?? 10)),
+    ),
     slippage_pct: input.slippagePct,
     priority_fee_sol: input.priorityFeeSol ?? 0.0005,
     stop_loss_pct: input.stopLossPct ?? null,
@@ -135,7 +223,33 @@ function toInsert(userId: string, input: CopyStrategyInput) {
     token_blacklist: input.tokenBlacklist ?? [],
     auto_sell: input.autoSell ?? true,
     auto_sell_retries: Math.min(10, Math.max(0, Math.round(input.autoSellRetries ?? 3))),
-    enabled: input.enabled ?? true,
+    min_pool_age_minutes: optInt(input.minPoolAgeMinutes),
+    max_pool_age_minutes: optInt(input.maxPoolAgeMinutes),
+    skip_blacklisted: input.skipBlacklisted ?? true,
+    require_freeze_authority_disabled:
+      input.requireFreezeAuthorityDisabled ?? true,
+    require_verified: input.requireVerified ?? false,
+    min_holders: optInt(input.minHolders),
+    min_market_cap_usd: optUsd(input.minMarketCapUsd),
+    max_market_cap_usd: optUsd(input.maxMarketCapUsd),
+    min_tvl_usd: optUsd(input.minTvlUsd),
+    sol_side_only: input.solSideOnly ?? true,
+    include_usdc_pools: input.includeUsdcPools ?? false,
+    score_trades: input.scoreTrades ?? false,
+    status,
+    enabled: status === "active",
+  }
+  // Only touch Privy id when the caller sets it (avoid wiping on edits).
+  if (input.privyWalletId !== undefined) {
+    row.privy_wallet_id = input.privyWalletId?.trim() || null
+  }
+  return row
+}
+
+function toInsert(userId: string, input: CopyStrategyInput) {
+  return {
+    user_id: userId,
+    ...toRowPayload(input),
   }
 }
 
@@ -183,20 +297,76 @@ export async function createCopyStrategy(
   return mapCopyStrategy(data as CopyStrategyRow)
 }
 
+export async function updateCopyStrategy(
+  supabase: SupabaseClient,
+  id: string,
+  input: CopyStrategyInput,
+): Promise<CopyStrategy> {
+  await requireUserId(supabase)
+  const { data, error } = await supabase
+    .from(TABLE)
+    .update({
+      ...toRowPayload(input),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select("*")
+    .single()
+
+  if (error) {
+    throw new Error(
+      withMigrationHint(errMessage(error, "Failed to update strategy"), MIGRATION),
+    )
+  }
+  return mapCopyStrategy(data as CopyStrategyRow)
+}
+
 export async function setCopyStrategyEnabled(
   supabase: SupabaseClient,
   id: string,
   enabled: boolean,
+  opts?: { privyWalletId?: string | null },
 ): Promise<CopyStrategy> {
+  const patch: Record<string, unknown> = {
+    enabled,
+    status: enabled ? "active" : "paused",
+  }
+  if (opts?.privyWalletId != null) {
+    patch.privy_wallet_id = opts.privyWalletId.trim() || null
+  }
+
   const { data, error } = await supabase
     .from(TABLE)
-    .update({ enabled })
+    .update(patch)
     .eq("id", id)
     .select("*")
     .single()
 
   if (error) throw new Error(errMessage(error, "Failed to update strategy"))
   return mapCopyStrategy(data as CopyStrategyRow)
+}
+
+/** Pause strategies and clear Privy ids after session signers are revoked. */
+export async function revokeExecutionWalletAccess(
+  supabase: SupabaseClient,
+  executionWallet: string,
+): Promise<number> {
+  const address = executionWallet.trim()
+  if (!address) return 0
+  const { data, error } = await supabase
+    .from(TABLE)
+    .update({
+      enabled: false,
+      status: "paused",
+      privy_wallet_id: null,
+    })
+    .eq("execution_wallet", address)
+    .select("id")
+
+  if (error) {
+    throw new Error(errMessage(error, "Failed to pause strategies after revoke"))
+  }
+  return (data ?? []).length
 }
 
 export async function deleteCopyStrategy(
@@ -212,4 +382,12 @@ export function parseTokenList(raw: string): string[] {
     .split(/[\s,]+/)
     .map((t) => t.trim().toUpperCase())
     .filter(Boolean)
+}
+
+/** Empty string → null; invalid → null. */
+export function parseOptionalNumber(raw: string): number | null {
+  const t = raw.trim()
+  if (!t) return null
+  const n = Number(t)
+  return Number.isFinite(n) ? n : null
 }

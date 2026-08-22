@@ -1,27 +1,34 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getSectionMeta, isSectionId, type SectionId } from "@/lib/navigation"
-
-function readHash(): SectionId {
-  if (typeof window === "undefined") return "dashboard"
-  const raw = decodeURIComponent(window.location.hash.replace(/^#/, ""))
-  return isSectionId(raw) ? raw : "dashboard"
-}
+import { usePathname } from "next/navigation"
+import {
+  getSectionMeta,
+  isSectionId,
+  pathToSection,
+  type SectionId,
+} from "@/lib/navigation"
 
 /**
- * Derives the active section from the URL hash so every view swaps
- * client-side without a navigation or full page reload.
+ * Active section from the URL path (`/discover`) with hash fallback
+ * (`/dashboard#discover`) for old bookmarks.
  */
-export function useSection() {
-  const [section, setSection] = useState<SectionId>("dashboard")
+export function useSection(): SectionId {
+  const pathname = usePathname() || "/dashboard"
+  const fromPath = pathToSection(pathname)
+  const [hash, setHash] = useState("")
 
   useEffect(() => {
-    const sync = () => setSection(readHash())
-    sync()
-    window.addEventListener("hashchange", sync)
-    return () => window.removeEventListener("hashchange", sync)
-  }, [])
+    const read = () =>
+      decodeURIComponent(window.location.hash.replace(/^#/, ""))
+    setHash(read())
+    const onHash = () => setHash(read())
+    window.addEventListener("hashchange", onHash)
+    return () => window.removeEventListener("hashchange", onHash)
+  }, [pathname])
+
+  const section: SectionId =
+    fromPath === "dashboard" && isSectionId(hash) ? hash : fromPath
 
   useEffect(() => {
     document.title = `${getSectionMeta(section).title} · YieldSync`

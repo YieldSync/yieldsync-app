@@ -4,6 +4,7 @@ import { useState } from "react"
 import {
   MoreHorizontal,
   Pause,
+  Pencil,
   Play,
   Plus,
   Trash2,
@@ -32,18 +33,111 @@ import {
   StatusBadge,
 } from "@/components/dashboard/primitives"
 import { StrategyBuilder } from "@/components/sections/strategy-builder"
+import { useEnableCopyTradingWallet } from "@/hooks/use-enable-copy-trading-wallet"
 import { useStrategies } from "@/hooks/use-strategies"
 import { useTradingWallets } from "@/hooks/use-trading-wallets"
 import { useWalletsData } from "@/hooks/use-wallets-data"
-import { shortAddress } from "@/lib/data"
+import { WalletLink } from "@/components/wallet/wallet-link"
+import type { CopyStrategy, CopyStrategyInput } from "@/lib/copy-strategies/api"
+
+function statusLabel(status: CopyStrategy["status"]) {
+  if (status === "draft") return "Draft"
+  if (status === "paused") return "Paused"
+  return "Active"
+}
 
 export function SyncStrategiesSection() {
   const [builderOpen, setBuilderOpen] = useState(false)
-  const { strategies, loading, error, create, setEnabled, remove } = useStrategies()
+  const [editing, setEditing] = useState<CopyStrategy | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
+  const { strategies, loading, error, create, update, setEnabled, remove } =
+    useStrategies()
+  const enableCopyTradingWallet = useEnableCopyTradingWallet()
   const { wallets: syncWallets } = useWalletsData()
   const { wallets: tradingWallets } = useTradingWallets()
 
-  const activeCount = strategies.filter((s) => s.enabled).length
+  const activeCount = strategies.filter((s) => s.status === "active").length
+
+  function openCreate() {
+    setEditing(null)
+    setBuilderOpen(true)
+  }
+
+  function openEdit(strategy: CopyStrategy) {
+    setEditing(strategy)
+    setBuilderOpen(true)
+  }
+
+  function closeBuilder() {
+    setBuilderOpen(false)
+    setEditing(null)
+  }
+
+  async function saveStrategy(input: CopyStrategyInput) {
+    setActionError(null)
+    const wantsActive = input.status === "active" || input.enabled === true
+
+    if (editing) {
+      if (wantsActive) {
+        const granted = await enableCopyTradingWallet(input.executionWallet)
+        await update(editing.id, {
+          ...input,
+          status: "active",
+          privyWalletId: granted.privy_wallet_id,
+        })
+      } else if (input.status === "draft") {
+        await update(editing.id, {
+          ...input,
+          status: "draft",
+          privyWalletId: null,
+        })
+      } else {
+        await update(editing.id, {
+          ...input,
+          status: "paused",
+        })
+      }
+      return
+    }
+
+    if (wantsActive) {
+      const granted = await enableCopyTradingWallet(input.executionWallet)
+      await create({
+        ...input,
+        status: "active",
+        privyWalletId: granted.privy_wallet_id,
+      })
+      return
+    }
+
+    await create({
+      ...input,
+      status: "draft",
+      privyWalletId: null,
+    })
+  }
+
+  async function toggleEnabled(
+    strategyId: string,
+    nextEnabled: boolean,
+    executionWallet: string,
+  ) {
+    setActionError(null)
+    try {
+      if (nextEnabled) {
+        const granted = await enableCopyTradingWallet(executionWallet)
+        await setEnabled(strategyId, true, {
+          privyWalletId: granted.privy_wallet_id,
+        })
+      } else {
+        await setEnabled(strategyId, false)
+      }
+    } catch (err) {
+      setActionError(
+        err instanceof Error ? err.message : "Failed to update strategy",
+      )
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -51,7 +145,10 @@ export function SyncStrategiesSection() {
         title="Strategies"
         description="Create and manage rules that copy a leader sync wallet onto your trading wallet."
       >
-        <Button size="lg" onClick={() => setBuilderOpen((open) => !open)}>
+        <Button
+          size="lg"
+          onClick={() => (builderOpen ? closeBuilder() : openCreate())}
+        >
           {builderOpen ? (
             <X data-icon="inline-start" />
           ) : (
@@ -66,15 +163,29 @@ export function SyncStrategiesSection() {
           {error}
         </p>
       ) : null}
+      {actionError ? (
+        <p role="alert" className="border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
+          {actionError}
+        </p>
+      ) : null}
 
       {builderOpen ? (
         <StrategyBuilder
+          key={editing?.id ?? "new"}
           syncWallets={syncWallets}
           tradingWallets={tradingWallets}
-          onCancel={() => setBuilderOpen(false)}
-          onCreate={async (input) => {
-            await create(input)
-            setBuilderOpen(false)
+          initial={editing}
+          onCancel={closeBuilder}
+          onSave={async (input) => {
+            try {
+              await saveStrategy(input)
+              closeBuilder()
+            } catch (err) {
+              setActionError(
+                err instanceof Error ? err.message : "Failed to save strategy",
+              )
+              throw err
+            }
           }}
         />
       ) : null}
@@ -127,7 +238,7 @@ export function SyncStrategiesSection() {
                         <div className="flex flex-col leading-tight">
                           <span>{strategy.sourceName || "Leader"}</span>
                           <span className="text-xs text-muted-foreground tabular">
-                            {shortAddress(strategy.sourceWallet)}
+                            <WalletLink address={strategy.sourceWallet} />
                           </span>
                         </div>
                       </TableCell>
@@ -135,7 +246,7 @@ export function SyncStrategiesSection() {
                         <div className="flex flex-col leading-tight">
                           <span>{strategy.executionLabel || "Execution"}</span>
                           <span className="text-xs text-muted-foreground tabular">
-                            {shortAddress(strategy.executionWallet)}
+                            <WalletLink address={strategy.executionWallet} />
                           </span>
                         </div>
                       </TableCell>
@@ -143,9 +254,20 @@ export function SyncStrategiesSection() {
                         {strategy.sizingMode === "fixed"
                           ? `${strategy.fixedSizeSol ?? "—"} SOL`
                           : `${strategy.copyPct}%`}
+                        <div className="text-xs text-muted-foreground">
+                          max{" "}
+                          {strategy.maxSizeSol == null
+                            ? "∞"
+                            : `${strategy.maxSizeSol} SOL`}{" "}
+                          · {strategy.maxPositions} open
+                        </div>
                       </TableCell>
                       <TableCell className="tabular text-muted-foreground">
-                        {strategy.minSizeSol} / {strategy.maxSizeSol} SOL
+                        {strategy.minSizeSol} /{" "}
+                        {strategy.maxSizeSol == null
+                          ? "∞"
+                          : strategy.maxSizeSol}{" "}
+                        SOL
                       </TableCell>
                       <TableCell className="tabular">{strategy.slippagePct}%</TableCell>
                       <TableCell className="text-muted-foreground">
@@ -154,7 +276,7 @@ export function SyncStrategiesSection() {
                           : "Off"}
                       </TableCell>
                       <TableCell>
-                        <StatusBadge status={strategy.enabled ? "Active" : "Paused"} />
+                        <StatusBadge status={statusLabel(strategy.status)} />
                       </TableCell>
                       <TableCell className="pr-5 text-right">
                         <DropdownMenu>
@@ -172,12 +294,28 @@ export function SyncStrategiesSection() {
                           <DropdownMenuContent align="end" className="w-44">
                             <DropdownMenuGroup>
                               <DropdownMenuItem
+                                onClick={() => openEdit(strategy)}
+                              >
+                                <Pencil />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
                                 onClick={() =>
-                                  void setEnabled(strategy.id, !strategy.enabled)
+                                  void toggleEnabled(
+                                    strategy.id,
+                                    strategy.status !== "active",
+                                    strategy.executionWallet,
+                                  )
                                 }
                               >
-                                {strategy.enabled ? <Pause /> : <Play />}
-                                {strategy.enabled ? "Pause" : "Enable"}
+                                {strategy.status === "active" ? (
+                                  <Pause />
+                                ) : (
+                                  <Play />
+                                )}
+                                {strategy.status === "active"
+                                  ? "Pause"
+                                  : "Enable"}
                               </DropdownMenuItem>
                             </DropdownMenuGroup>
                             <DropdownMenuSeparator />

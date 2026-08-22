@@ -4,9 +4,10 @@ YieldSync frontend (landing, auth, dashboard) — Next.js App Router.
 
 ## Routes
 
-- `/` — Landing
-- `/login` / `/signup` — Auth (Supabase email, Google, Solana)
-- `/dashboard` — App shell (hash sections)
+- `https://yieldsync.io/` — Landing
+- `https://app.yieldsync.io/login` — Auth
+- `https://app.yieldsync.io/dashboard` — Overview
+- `https://app.yieldsync.io/discover` — Discover (same for `/strategies`, `/positions`, …)
 
 ## Local
 
@@ -28,9 +29,10 @@ In Supabase → Authentication:
 
 1. Enable Email, Google, Web3 (Solana) as needed
 2. Add redirect URLs:
+   - `https://app.yieldsync.io/auth/callback`
    - `https://yieldsync.io/auth/callback`
    - `https://*.vercel.app/auth/callback`
-3. Site URL: production domain
+3. Site URL: `https://app.yieldsync.io`
 
 ## Stack
 

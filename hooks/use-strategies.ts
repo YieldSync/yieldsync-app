@@ -6,6 +6,7 @@ import {
   deleteCopyStrategy,
   listCopyStrategies,
   setCopyStrategyEnabled,
+  updateCopyStrategy,
   type CopyStrategy,
   type CopyStrategyInput,
 } from "@/lib/copy-strategies/api"
@@ -57,10 +58,24 @@ export function useStrategies() {
     [refresh],
   )
 
-  const setEnabled = useCallback(
-    async (id: string, enabled: boolean) => {
+  const update = useCallback(
+    async (id: string, input: CopyStrategyInput) => {
       const supabase = createClient()
-      await setCopyStrategyEnabled(supabase, id, enabled)
+      const row = await updateCopyStrategy(supabase, id, input)
+      await refresh()
+      return row
+    },
+    [refresh],
+  )
+
+  const setEnabled = useCallback(
+    async (
+      id: string,
+      enabled: boolean,
+      opts?: { privyWalletId?: string | null },
+    ) => {
+      const supabase = createClient()
+      await setCopyStrategyEnabled(supabase, id, enabled, opts)
       await refresh()
     },
     [refresh],
@@ -75,5 +90,14 @@ export function useStrategies() {
     [refresh],
   )
 
-  return { strategies, loading, error, refresh, create, setEnabled, remove }
+  return {
+    strategies,
+    loading,
+    error,
+    refresh,
+    create,
+    update,
+    setEnabled,
+    remove,
+  }
 }

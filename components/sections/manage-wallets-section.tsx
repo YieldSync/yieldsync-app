@@ -1,21 +1,17 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { usePrivy } from "@privy-io/react-auth"
-import {
-  useCreateWallet,
-  useExportWallet,
-  useImportWallet,
-} from "@privy-io/react-auth/solana"
+import { usePrivy, useSigners, useUser } from "@privy-io/react-auth"
+import { useCreateWallet, useExportWallet } from "@privy-io/react-auth/solana"
 import {
   Check,
   Copy,
   KeyRound,
   Layers,
   Plus,
+  ShieldOff,
   Trash2,
-  Upload,
   Wallet,
   BadgeCheck,
 } from "lucide-react"
@@ -28,17 +24,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import {
   Table,
   TableBody,
@@ -48,6 +34,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { SectionHeader, StatCard, StatusBadge } from "@/components/dashboard/primitives"
+import { revokeExecutionWalletAccess } from "@/lib/copy-strategies/api"
 import {
   getTradingWalletQuota,
   listTradingWallets,
@@ -62,8 +49,17 @@ import {
   getEmbeddedSolanaWallets,
   walletAddressFromCreateResult,
 } from "@/lib/trading-wallets/privy"
-import { privySignerInputs } from "@/lib/privy/signer"
+import { getPrivySignerId } from "@/lib/privy/signer"
 import { copyToClipboard, truncateAddress } from "@/lib/utils"
+import { WalletLink } from "@/components/wallet/wallet-link"
+
+type WalletPermissions = {
+  walletId: string
+  address: string
+  yieldsyncGranted: boolean
+  yieldsyncSignerId: string | null
+  additionalSigners: { signerId: string; policyIds: string[] }[]
+}
 
 export function ManageWalletsSection() {
   const [mounted, setMounted] = useState(false)
@@ -86,7 +82,9 @@ export function ManageWalletsSection() {
 
 function ManageWalletsSectionInner() {
   const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID
+  const yieldsyncSignerId = getPrivySignerId()
   const { ready, authenticated, user } = usePrivy()
+  const { refreshUser } = useUser()
   const {
     session: ysSession,
     loading: ysLoading,
@@ -95,15 +93,22 @@ function ManageWalletsSectionInner() {
   } = useSupabaseAuth()
   const { createWallet } = useCreateWallet()
   const { exportWallet } = useExportWallet()
-  const { importWallet } = useImportWallet()
+  const { removeSigners } = useSigners()
 
   const [busy, setBusy] = useState<string | null>(null)
+  const [exporting, setExporting] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
-  const [importOpen, setImportOpen] = useState(false)
-  const [importKey, setImportKey] = useState("")
   const [copied, setCopied] = useState<string | null>(null)
   const [dbRows, setDbRows] = useState<TradingWalletRow[]>([])
+  const [balances, setBalances] = useState<
+    Record<string, { lamports: number; sol: number; ok: boolean; error?: string }>
+  >({})
+  const [balancesLoading, setBalancesLoading] = useState(false)
+  const [permissionsByWalletId, setPermissionsByWalletId] = useState<
+    Record<string, WalletPermissions>
+  >({})
+  const [permissionsLoading, setPermissionsLoading] = useState(false)
   const [quota, setQuota] = useState<TradingWalletQuota>({
     maxTradingWallets: 0,
     planName: "free",
@@ -114,6 +119,12 @@ function ManageWalletsSectionInner() {
   const [labelsReady, setLabelsReady] = useState(false)
   const [editingAddress, setEditingAddress] = useState<string | null>(null)
   const [editLabel, setEditLabel] = useState("")
+
+  const mutating =
+    busy === "create" ||
+    (busy?.startsWith("delete:") ?? false) ||
+    (busy?.startsWith("label:") ?? false) ||
+    (busy?.startsWith("revoke:") ?? false)
 
   const privyWallets = useMemo(
     () => getEmbeddedSolanaWallets(user?.linkedAccounts),
@@ -135,6 +146,44 @@ function ManageWalletsSectionInner() {
     )
     return privyWallets.filter((w) => active.has(w.address))
   }, [privyWallets, dbRows, labelsReady])
+
+  const refreshPermissions = useCallback(async (walletIds: string[]) => {
+    const ids = walletIds.filter(Boolean)
+    if (ids.length === 0) {
+      setPermissionsByWalletId({})
+      return
+    }
+    setPermissionsLoading(true)
+    try {
+      const res = await fetch("/api/trading-wallets/permissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ walletIds: ids }),
+        cache: "no-store",
+      })
+      const json = (await res.json().catch(() => null)) as {
+        permissions?: WalletPermissions[]
+        error?: string
+      } | null
+      if (!res.ok) {
+        setError(json?.error || "Could not load YieldSync permissions from Privy.")
+        return
+      }
+      const next: Record<string, WalletPermissions> = {}
+      for (const row of json?.permissions ?? []) {
+        next[row.walletId] = row
+      }
+      setPermissionsByWalletId(next)
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Could not load YieldSync permissions from Privy.",
+      )
+    } finally {
+      setPermissionsLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     if (!supabase || !ysSession || !ready || !authenticated) {
@@ -190,6 +239,98 @@ function ManageWalletsSectionInner() {
     }
   }, [supabase, ysSession, ready, authenticated, labelsReady, privyWallets])
 
+  const visibleAddressesKey = useMemo(
+    () =>
+      visibleWallets
+        .map((w) => w.address)
+        .sort()
+        .join(","),
+    [visibleWallets],
+  )
+
+  const visibleWalletIdsKey = useMemo(
+    () =>
+      visibleWallets
+        .map((w) => w.id)
+        .filter(Boolean)
+        .sort()
+        .join(","),
+    [visibleWallets],
+  )
+
+  useEffect(() => {
+    if (!visibleAddressesKey) {
+      setBalances({})
+      setBalancesLoading(false)
+      return
+    }
+    const addresses = visibleAddressesKey.split(",")
+    let cancelled = false
+    setBalancesLoading(true)
+    void (async () => {
+      try {
+        const res = await fetch("/api/trading-wallets/balances", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ addresses }),
+          cache: "no-store",
+        })
+        const json = (await res.json().catch(() => null)) as {
+          balances?: {
+            address: string
+            lamports?: number
+            sol?: number
+            ok?: boolean
+            error?: string
+          }[]
+          error?: string
+        } | null
+        if (cancelled) return
+        if (!res.ok) {
+          setError(
+            json?.error || "Could not load SOL balances from backend.",
+          )
+          setBalances({})
+          return
+        }
+        const next: Record<
+          string,
+          { lamports: number; sol: number; ok: boolean; error?: string }
+        > = {}
+        for (const row of json?.balances ?? []) {
+          next[row.address] = {
+            lamports: Number(row.lamports ?? 0),
+            sol: Number(row.sol ?? 0),
+            ok: Boolean(row.ok),
+            error: row.error,
+          }
+        }
+        setBalances(next)
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Could not load SOL balances from backend.",
+          )
+        }
+      } finally {
+        if (!cancelled) setBalancesLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [visibleAddressesKey])
+
+  useEffect(() => {
+    if (!visibleWalletIdsKey) {
+      setPermissionsByWalletId({})
+      return
+    }
+    void refreshPermissions(visibleWalletIdsKey.split(","))
+  }, [visibleWalletIdsKey, refreshPermissions])
+
   async function onCreate() {
     setError(null)
     setMessage(null)
@@ -219,10 +360,9 @@ function ManageWalletsSectionInner() {
         return
       }
 
-      const signers = privySignerInputs()
+      // No session signers here — YieldSync access is granted when a strategy starts.
       const created = await createWallet({
         createAdditional: privyWallets.length > 0,
-        ...(signers ? { signers } : {}),
       })
       const address = walletAddressFromCreateResult(created)
       if (!address) throw new Error("Wallet created but address missing.")
@@ -236,7 +376,9 @@ function ManageWalletsSectionInner() {
       ])
       setDbRows(rows)
       setQuota(q)
-      setMessage("Wallet created via Privy.")
+      setMessage(
+        "Wallet created via Privy. YieldSync signing rights are granted when you start a strategy.",
+      )
     } catch {
       setError("Something went wrong creating the wallet. Please try again.")
     } finally {
@@ -247,11 +389,51 @@ function ManageWalletsSectionInner() {
   async function onExport(address: string) {
     setError(null)
     setMessage(null)
-    setBusy(`export:${address}`)
+    setExporting(address)
     try {
-      await exportWallet({ address })
+      await Promise.race([
+        exportWallet({ address }),
+        new Promise<void>((resolve) => {
+          window.setTimeout(resolve, 1500)
+        }),
+      ])
     } catch {
       setError("Export failed. Please try again.")
+    } finally {
+      setExporting(null)
+    }
+  }
+
+  async function onRevoke(address: string, walletId?: string) {
+    if (!supabase) return
+    if (
+      !window.confirm(
+        "Revoke YieldSync signing rights on this wallet?\n\nActive strategies using this wallet will be paused. You can grant access again when you start a strategy.",
+      )
+    ) {
+      return
+    }
+    setError(null)
+    setMessage(null)
+    setBusy(`revoke:${address}`)
+    try {
+      await removeSigners({ address })
+      try {
+        await refreshUser()
+      } catch {
+        // optional
+      }
+      const paused = await revokeExecutionWalletAccess(supabase, address)
+      if (walletId) {
+        await refreshPermissions([walletId])
+      }
+      setMessage(
+        paused > 0
+          ? `YieldSync access revoked. ${paused} strateg${paused === 1 ? "y" : "ies"} paused.`
+          : "YieldSync access revoked.",
+      )
+    } catch {
+      setError("Could not revoke YieldSync access. Please try again.")
     } finally {
       setBusy(null)
     }
@@ -259,11 +441,29 @@ function ManageWalletsSectionInner() {
 
   async function onDelete(address: string) {
     if (!supabase) return
+    const bal = balances[address]
+    if (balancesLoading || !bal) {
+      setError("Balance still loading. Try again in a moment.")
+      return
+    }
+    if (!bal.ok) {
+      setError(
+        bal.error ||
+          "Could not verify SOL balance. Delete is only allowed when balance is known and zero.",
+      )
+      return
+    }
+    if (bal.lamports > 0) {
+      setError(
+        `Cannot remove wallet with ${bal.sol.toFixed(4)} SOL. Withdraw all funds first, then delete.`,
+      )
+      return
+    }
     const label =
       labelByAddress.get(address)?.trim() || truncateAddress(address, 6)
     if (
       !window.confirm(
-        `Remove “${label}” from YieldSync?\n\nThe wallet disappears from your list. Funds stay on-chain. Export the private key first if you still need it outside YieldSync.`,
+        `Remove “${label}” from YieldSync?\n\nBalance is 0 SOL. The wallet disappears from your list. Export the private key first if you still need it outside YieldSync.`,
       )
     ) {
       return
@@ -278,51 +478,14 @@ function ManageWalletsSectionInner() {
           r.address === address ? { ...r, status: "removed" as const } : r,
         ),
       )
+      setBalances((prev) => {
+        const next = { ...prev }
+        delete next[address]
+        return next
+      })
       setMessage("Wallet removed.")
     } catch {
       setError("Could not remove wallet. Please try again.")
-    } finally {
-      setBusy(null)
-    }
-  }
-
-  async function onImport(e: React.FormEvent) {
-    e.preventDefault()
-    setError(null)
-    setMessage(null)
-    if (!quota.canCreate) {
-      setError("Upgrade to Professional to create more trading wallets.")
-      return
-    }
-    if (visibleWallets.length >= quota.maxTradingWallets) {
-      setError(`Maximum ${quota.maxTradingWallets} trading wallets.`)
-      return
-    }
-    const key = importKey.trim()
-    if (!key) {
-      setError("Paste a Solana private key (base58).")
-      return
-    }
-    setBusy("import")
-    try {
-      const imported = await importWallet({ privateKey: key })
-      const address =
-        (imported as { address?: string })?.address ||
-        (imported as { wallet?: { address?: string } })?.wallet?.address
-      if (supabase && address) {
-        await upsertTradingWallet(supabase, {
-          address,
-          source: "imported",
-          reactivate: true,
-        })
-        const rows = await listTradingWallets(supabase)
-        setDbRows(rows)
-      }
-      setImportKey("")
-      setImportOpen(false)
-      setMessage("Wallet imported via Privy.")
-    } catch {
-      setError("Import failed. Check the key and try again.")
     } finally {
       setBusy(null)
     }
@@ -368,25 +531,12 @@ function ManageWalletsSectionInner() {
     <div className="flex flex-col gap-6">
       <SectionHeader
         title="Trading Wallets"
-        description="Non-custodial Solana wallets created with Privy. Your keys stay under your control."
+        description="Non-custodial Solana wallets via Privy. YieldSync signing rights are granted only when you start a strategy."
       >
         <Button
-          variant="outline"
           size="lg"
           disabled={
-            busy !== null ||
-            !quota.canCreate ||
-            visibleWallets.length >= quota.maxTradingWallets
-          }
-          onClick={() => setImportOpen(true)}
-        >
-          <Upload data-icon="inline-start" />
-          Import key
-        </Button>
-        <Button
-          size="lg"
-          disabled={
-            busy !== null ||
+            mutating ||
             !quota.canCreate ||
             visibleWallets.length >= quota.maxTradingWallets ||
             !ready ||
@@ -461,8 +611,9 @@ function ManageWalletsSectionInner() {
           <CardHeader className="border-b border-border">
             <CardTitle className="text-base">Your Privy trading wallets</CardTitle>
             <CardDescription>
-              Create generates an embedded Solana wallet. Assign it in the Strategy
-              Builder as the execution wallet.
+              Create generates an embedded Solana wallet. Starting a strategy asks
+              Privy for YieldSync signing rights
+              {yieldsyncSignerId ? ` (${yieldsyncSignerId})` : ""}.
             </CardDescription>
           </CardHeader>
           <CardContent className="px-0">
@@ -472,7 +623,8 @@ function ManageWalletsSectionInner() {
                   <TableRow>
                     <TableHead className="pl-5">Label</TableHead>
                     <TableHead>Address</TableHead>
-                    <TableHead>Source</TableHead>
+                    <TableHead>SOL</TableHead>
+                    <TableHead>YieldSync access</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="pr-5 text-right">Actions</TableHead>
                   </TableRow>
@@ -481,7 +633,7 @@ function ManageWalletsSectionInner() {
                   {!labelsReady ? (
                     <TableRow>
                       <TableCell
-                        colSpan={5}
+                        colSpan={6}
                         className="px-5 py-8 text-sm text-muted-foreground"
                       >
                         Loading trading wallets…
@@ -490,7 +642,7 @@ function ManageWalletsSectionInner() {
                   ) : visibleWallets.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={5}
+                        colSpan={6}
                         className="px-5 py-8 text-sm text-muted-foreground"
                       >
                         No trading wallets yet. Create one with Privy to get started.
@@ -500,7 +652,29 @@ function ManageWalletsSectionInner() {
                     visibleWallets.map((wallet) => {
                       const label =
                         labelByAddress.get(wallet.address) || "Wallet"
-                      const row = dbRows.find((r) => r.address === wallet.address)
+                      const bal = balances[wallet.address]
+                      const balText = balancesLoading
+                        ? "…"
+                        : !bal
+                          ? "—"
+                          : bal.ok
+                            ? bal.sol.toFixed(4)
+                            : "err"
+                      const canDelete =
+                        Boolean(bal?.ok) && bal!.lamports === 0 && !balancesLoading
+                      const perms = wallet.id
+                        ? permissionsByWalletId[wallet.id]
+                        : undefined
+                      const granted = perms?.yieldsyncGranted === true
+                      const accessText = permissionsLoading
+                        ? "…"
+                        : !wallet.id
+                          ? "—"
+                          : !perms
+                            ? "—"
+                            : granted
+                              ? "Granted"
+                              : "Not granted"
                       return (
                         <TableRow key={wallet.address}>
                           <TableCell className="pl-5 font-medium">
@@ -548,21 +722,59 @@ function ManageWalletsSectionInner() {
                             )}
                           </TableCell>
                           <TableCell className="tabular">
-                            <button
-                              type="button"
-                              className="inline-flex items-center gap-1.5 hover:text-foreground"
-                              onClick={() => void onCopy(wallet.address)}
-                            >
-                              {truncateAddress(wallet.address, 4)}
-                              {copied === wallet.address ? (
-                                <Check className="size-3.5 text-primary" />
-                              ) : (
-                                <Copy className="size-3.5 text-muted-foreground" />
-                              )}
-                            </button>
+                            <div className="inline-flex items-center gap-1.5">
+                              <WalletLink
+                                address={wallet.address}
+                                className="hover:text-foreground"
+                              />
+                              <button
+                                type="button"
+                                className="inline-flex items-center hover:text-foreground"
+                                aria-label="Copy address"
+                                onClick={() => void onCopy(wallet.address)}
+                              >
+                                {copied === wallet.address ? (
+                                  <Check className="size-3.5 text-primary" />
+                                ) : (
+                                  <Copy className="size-3.5 text-muted-foreground" />
+                                )}
+                              </button>
+                            </div>
                           </TableCell>
-                          <TableCell className="capitalize text-muted-foreground">
-                            {row?.source ?? "created"}
+                          <TableCell
+                            className="tabular text-muted-foreground"
+                            title={bal?.error}
+                          >
+                            {balText}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col gap-1">
+                              <span
+                                className={
+                                  granted
+                                    ? "text-sm text-foreground"
+                                    : "text-sm text-muted-foreground"
+                                }
+                              >
+                                {accessText}
+                              </span>
+                              {granted ? (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 justify-start px-0 text-xs"
+                                  disabled={busy === `revoke:${wallet.address}`}
+                                  onClick={() =>
+                                    void onRevoke(wallet.address, wallet.id)
+                                  }
+                                >
+                                  <ShieldOff className="size-3.5" />
+                                  {busy === `revoke:${wallet.address}`
+                                    ? "Revoking…"
+                                    : "Revoke"}
+                                </Button>
+                              ) : null}
+                            </div>
                           </TableCell>
                           <TableCell>
                             <StatusBadge status="Active" />
@@ -573,7 +785,7 @@ function ManageWalletsSectionInner() {
                                 variant="ghost"
                                 size="icon-sm"
                                 aria-label="Export key"
-                                disabled={busy !== null}
+                                disabled={exporting === wallet.address}
                                 onClick={() => void onExport(wallet.address)}
                               >
                                 <KeyRound />
@@ -581,8 +793,17 @@ function ManageWalletsSectionInner() {
                               <Button
                                 variant="ghost"
                                 size="icon-sm"
-                                aria-label="Remove"
-                                disabled={busy !== null}
+                                aria-label="Remove (only when SOL balance is 0)"
+                                title={
+                                  canDelete
+                                    ? "Remove wallet"
+                                    : "Delete only when SOL balance is 0"
+                                }
+                                disabled={
+                                  mutating ||
+                                  busy === `delete:${wallet.address}` ||
+                                  !canDelete
+                                }
                                 onClick={() => void onDelete(wallet.address)}
                               >
                                 <Trash2 />
@@ -599,45 +820,6 @@ function ManageWalletsSectionInner() {
           </CardContent>
         </Card>
       )}
-
-      <Dialog open={importOpen} onOpenChange={setImportOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Import Solana key</DialogTitle>
-            <DialogDescription>
-              Paste a base58 private key. Privy embeds it as a trading wallet.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={(e) => void onImport(e)}>
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="import-key">Private key</FieldLabel>
-                <Textarea
-                  id="import-key"
-                  value={importKey}
-                  onChange={(e) => setImportKey(e.target.value)}
-                  rows={3}
-                  spellCheck={false}
-                  className="font-mono text-xs"
-                  placeholder="Your base58 secret key"
-                />
-              </Field>
-            </FieldGroup>
-            <DialogFooter className="mt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setImportOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={busy === "import"}>
-                {busy === "import" ? "Importing…" : "Import wallet"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

@@ -1,33 +1,44 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronsRight } from 'lucide-react'
+import {
+  ChevronsRight,
+  LayoutGrid,
+  MessageCircle,
+  Repeat,
+  Settings,
+  TrendingUp,
+  Wallet,
+  type LucideIcon,
+} from 'lucide-react'
 import { LiquidGradient } from '@/components/liquid-gradient'
 import { SectionShell } from '@/components/brand'
 import { cn } from '@/lib/utils'
+import { publicAppHref } from '@/lib/site'
 import content from '@/text-content/how-it-works.json'
 
-const GLYPHS = [
-  'M4 12h16M4 7h16M4 17h16',
-  'M12 3l8 5-8 5-8-5 8-5Zm0 13 8-5v6l-8 5-8-5v-6l8 5Z',
-  'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 4v10',
-  '',
-  'M6 5h12l-6 7 6 7H6l6-7-6-7Z',
-  'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm-4 9h8',
-  'M5 9c4-5 10-5 14 0M5 15c4 5 10 5 14 0',
-  'M7 8h10l-3 4h-7l3 4H7',
-  'M4 10h16M4 14h16M9 6l-3 12M18 6l-3 12',
-  'M12 4l7 4v8l-7 4-7-4V8l7-4Z',
-  'M5 12a7 7 0 0 1 14 0 7 7 0 0 1-14 0Zm3 0h8',
-  '',
-  'M7 6l10 12M17 6L7 18',
-  'M9 5h6l3 7-6 7-6-7 3-7Z',
-  'M4 16c5 0 5-8 10-8s5 8 6 8',
-  'M8 7h8l-4 5 4 5H8l4-5-4-5Z',
-  'M12 3v18M5 8l7-5 7 5v8l-7 5-7-5V8Z',
-  'M6 12h12M9 8l-3 4 3 4M15 8l3 4-3 4',
-  'M12 5a7 7 0 1 0 0 14 7 7 0 0 0 0-14Z',
-  '',
+/** Dashboard mockup icons — reused in the how-it-works mosaic */
+const DASH_ICONS: (LucideIcon | null)[] = [
+  LayoutGrid,
+  Wallet,
+  Repeat,
+  TrendingUp,
+  MessageCircle,
+  Settings,
+  LayoutGrid,
+  Wallet,
+  null,
+  Repeat,
+  TrendingUp,
+  MessageCircle,
+  Settings,
+  LayoutGrid,
+  Wallet,
+  null,
+  Repeat,
+  TrendingUp,
+  MessageCircle,
+  null,
 ]
 
 export function HowItWorks() {
@@ -49,8 +60,8 @@ export function HowItWorks() {
         {/* Top-right: compact Get Started bar, bottom-aligned (not full cell height) */}
         <div className="flex items-end border-b border-border">
           <a
-            href="/login#signup"
-            className="flex h-14 w-full shrink-0 items-center justify-between border-t border-border px-5 text-[15px] font-medium text-foreground transition-colors hover:bg-white/3 sm:px-6"
+            href={publicAppHref('/login#signup')}
+            className="flex h-14 w-full shrink-0 items-center justify-between border-t border-border px-5 text-[15px] font-medium text-foreground transition-colors hover:bg-white/3 light:hover:bg-black/[0.03] sm:px-6"
           >
             Get Started
             <ChevronsRight className="size-4 text-muted-foreground" />
@@ -68,8 +79,8 @@ export function HowItWorks() {
                 className={cn(
                   'w-full border-b border-border px-5 py-8 text-left transition-colors sm:px-8',
                   active === i
-                    ? 'border-l-2 border-l-primary bg-white/2'
-                    : 'border-l-2 border-l-transparent hover:bg-white/1',
+                    ? 'border-l-2 border-l-primary bg-white/2 light:bg-black/[0.03]'
+                    : 'border-l-2 border-l-transparent hover:bg-white/1 light:hover:bg-black/[0.02]',
                 )}
               >
                 <span
@@ -93,7 +104,7 @@ export function HowItWorks() {
           ))}
         </ul>
 
-        {/* Bottom-right: liquid */}
+        {/* Bottom-right: liquid + dashboard icons */}
         <div className="relative min-h-[420px] overflow-hidden border-b border-border lg:min-h-0">
           <LiquidGradient
             seed={820}
@@ -105,14 +116,15 @@ export function HowItWorks() {
             bands={3.8}
             amount={0.2}
           />
+          <div className="absolute inset-0 bg-[radial-gradient(70%_60%_at_50%_50%,transparent_0%,rgba(5,5,5,0.25)_100%)] light:bg-[radial-gradient(70%_60%_at_50%_50%,rgba(255,255,255,0.25)_0%,rgba(243,247,244,0.55)_100%)]" />
           <div className="absolute inset-0 flex items-center justify-center p-6">
-            <div className="grid grid-cols-5 gap-2 rounded-2xl border border-white/20 bg-white/8 p-3 backdrop-blur-md">
-              {GLYPHS.map((d, i) => (
+            <div className="grid grid-cols-5 gap-2 rounded-2xl border border-white/20 bg-white/8 p-3 backdrop-blur-md light:border-black/10 light:bg-white/70">
+              {DASH_ICONS.map((Icon, i) => (
                 <span
                   key={i}
                   className={cn(
-                    'flex size-9 items-center justify-center rounded-lg border border-white/12 bg-black/35',
-                    !d && 'bg-black/20',
+                    'flex size-9 items-center justify-center rounded-lg border border-white/12 bg-black/35 text-white/90 light:border-black/8 light:bg-white light:text-foreground/80',
+                    !Icon && 'bg-black/20 light:bg-black/[0.04]',
                   )}
                   style={{
                     animation: `mc-float ${3 + (i % 5) * 0.45}s ease-in-out ${
@@ -120,21 +132,7 @@ export function HowItWorks() {
                     }s infinite`,
                   }}
                 >
-                  {d ? (
-                    <svg
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                      className="size-4"
-                    >
-                      <path
-                        d={d}
-                        fill="none"
-                        stroke="rgba(255,255,255,0.85)"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  ) : null}
+                  {Icon ? <Icon className="size-4" strokeWidth={1.75} /> : null}
                 </span>
               ))}
             </div>

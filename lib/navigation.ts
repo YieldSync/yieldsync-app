@@ -4,6 +4,7 @@ import {
   BookOpen,
   Brain,
   CreditCard,
+  Layers,
   RefreshCw,
   SlidersHorizontal,
   Sparkles,
@@ -19,6 +20,7 @@ export type SectionId =
   | "tracking-wallets"
   | "strategies"
   | "trading-wallets"
+  | "positions"
   | "plans"
   | "billing"
   | "settings"
@@ -88,6 +90,15 @@ export const navItems: NavItem[] = [
       "Create, fund and assign the trading wallets that execute your synchronized strategies.",
   },
   {
+    id: "positions",
+    title: "Positions",
+    hash: "#positions",
+    icon: Layers,
+    group: "Sync Hub",
+    description:
+      "Open and historical LP positions from copy trading across tracking and trading wallets.",
+  },
+  {
     id: "plans",
     title: "Plans",
     hash: "#plans",
@@ -130,9 +141,24 @@ export function isSectionId(value: string): value is SectionId {
   return (sectionIds as string[]).includes(value)
 }
 
-/** Full href for a section. The dashboard lives on the bare path. */
+/** Full href for a section. Dashboard stays at /dashboard; others are /discover etc. */
 export function sectionHref(id: SectionId) {
-  return id === "dashboard" ? BASE_PATH : `${BASE_PATH}#${id}`
+  return id === "dashboard" ? BASE_PATH : `/${id}`
+}
+
+export function pathToSection(pathname: string): SectionId {
+  const raw = pathname.replace(/\/+$/, "") || "/"
+  if (raw === "/" || raw === BASE_PATH) return "dashboard"
+  const first = raw.slice(1).split("/")[0] ?? ""
+  return isSectionId(first) ? first : "dashboard"
+}
+
+export function isAppSectionPath(pathname: string): boolean {
+  const raw = pathname.replace(/\/+$/, "") || "/"
+  if (raw === BASE_PATH || raw.startsWith(`${BASE_PATH}/`)) return true
+  if (raw.startsWith("/wallet/") || raw === "/wallet") return true
+  const first = raw.slice(1).split("/")[0] ?? ""
+  return isSectionId(first)
 }
 
 export function getSectionMeta(id: SectionId) {
