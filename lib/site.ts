@@ -50,3 +50,24 @@ export function absoluteMarketingUrl(path = "/"): string {
   const p = path.startsWith("/") ? path : `/${path}`
   return `${MARKETING_ORIGIN}${p}`
 }
+
+/** Product home: `/` on app.yieldsync.io, `/dashboard` locally (landing occupies `/`). */
+export function appHomePath(host: string): string {
+  return isAppHost(hostnameOf(host)) ? "/" : "/dashboard"
+}
+
+export function normalizeNextPath(
+  raw: string | null | undefined,
+  host: string,
+): string {
+  const home = appHomePath(host)
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return home
+  if (
+    isAppHost(hostnameOf(host)) &&
+    (raw === "/dashboard" || raw.startsWith("/dashboard/"))
+  ) {
+    const rest = raw.slice("/dashboard".length)
+    return !rest || rest === "/" ? "/" : rest
+  }
+  return raw
+}

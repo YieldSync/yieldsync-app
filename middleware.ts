@@ -8,11 +8,13 @@ import {
 import { isAppSectionPath } from "@/lib/navigation"
 import {
   APP_ORIGIN,
+  appHomePath,
   hostnameOf,
   isAppHost,
   isLocalHost,
   isMarketingHost,
   isSplitHost,
+  normalizeNextPath,
 } from "@/lib/site"
 
 function copyCookies(from: NextResponse, to: NextResponse) {
@@ -31,6 +33,15 @@ export async function middleware(request: NextRequest) {
   const host = hostnameOf(request.headers.get("host"))
   const path = request.nextUrl.pathname
   const appRoot = isAppHost(host) && path === "/"
+  const home = appHomePath(host)
+
+  // Canonical app home is `/` — old /dashboard URLs redirect there.
+  if (isAppHost(host) && (path === "/dashboard" || path.startsWith("/dashboard/"))) {
+    const rest = path.slice("/dashboard".length)
+    const dest = new URL(rest && rest !== "/" ? rest : "/", request.url)
+    dest.search = request.nextUrl.search
+    return NextResponse.redirect(dest, 308)
+  }
 
   // yieldsync.io = landing only. Never send "/" to app.
   // app.yieldsync.io = dashboard/login only. Never serve the landing page.
@@ -83,16 +94,15 @@ export async function middleware(request: NextRequest) {
       (appRoot || isAppSectionPath(path) || path.startsWith("/wallet/"))
     ) {
       const login = new URL("/login", request.url)
-      login.searchParams.set("next", appRoot ? "/dashboard" : path)
+      if (!appRoot) login.searchParams.set("next", path)
       return copyCookies(response, NextResponse.redirect(login))
     }
 
     if (user && (path === "/login" || path === "/signup")) {
-      const next = request.nextUrl.searchParams.get("next")
-      const dest =
-        next && next.startsWith("/") && !next.startsWith("//")
-          ? next
-          : "/dashboard"
+      const dest = normalizeNextPath(
+        request.nextUrl.searchParams.get("next"),
+        host,
+      )
       return copyCookies(
         response,
         NextResponse.redirect(new URL(dest, request.url)),

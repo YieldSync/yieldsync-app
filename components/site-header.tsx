@@ -102,7 +102,7 @@ export function SiteHeader() {
           <Link
             href={
               signedIn
-                ? publicAppHref('/dashboard')
+                ? publicAppHref('/')
                 : SIGNUPS_ENABLED
                   ? publicAppHref('/login#signup')
                   : publicAppHref('/login')
@@ -168,7 +168,7 @@ export function SiteHeader() {
           <Link
             href={
               signedIn
-                ? publicAppHref('/dashboard')
+                ? publicAppHref('/')
                 : SIGNUPS_ENABLED
                   ? publicAppHref('/login#signup')
                   : publicAppHref('/login')

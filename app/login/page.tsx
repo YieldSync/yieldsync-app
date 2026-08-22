@@ -18,7 +18,7 @@ import {
   LAUNCHING_SOON_TITLE,
   SIGNUPS_ENABLED,
 } from "@/lib/product";
-import { MARKETING_ORIGIN } from "@/lib/site";
+import { MARKETING_ORIGIN, normalizeNextPath } from "@/lib/site";
 
 function homeHref() {
   if (typeof window === "undefined") return "/"
@@ -26,8 +26,9 @@ function homeHref() {
 }
 
 function safeNextPath(raw: string | null | undefined) {
-  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/dashboard";
-  return raw;
+  const host =
+    typeof window === "undefined" ? "" : window.location.hostname
+  return normalizeNextPath(raw, host)
 }
 
 function readAuthErrorFromLocation(): string | null {
@@ -76,7 +77,7 @@ export default function LoginPage() {
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
-  const [nextPath, setNextPath] = useState("/dashboard");
+  const [nextPath, setNextPath] = useState("/");
   const [done, setDone] = useState(false);
   const [socialLoading, setSocialLoading] = useState<"google" | "solana" | null>(
     null,
@@ -93,7 +94,7 @@ export default function LoginPage() {
       // Clean ugly OAuth error fragments from the URL
       const next = safeNextPath(q);
       const clean =
-        next && next !== "/dashboard"
+        next && next !== "/" && next !== "/dashboard"
           ? `/login?next=${encodeURIComponent(next)}`
           : "/login";
       window.history.replaceState(null, "", clean);

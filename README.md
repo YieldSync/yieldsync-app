@@ -6,7 +6,7 @@ YieldSync frontend (landing, auth, dashboard) — Next.js App Router.
 
 - `https://yieldsync.io/` — Landing
 - `https://app.yieldsync.io/login` — Auth
-- `https://app.yieldsync.io/dashboard` — Overview
+- `https://app.yieldsync.io/` — App home (overview)
 - `https://app.yieldsync.io/discover` — Discover (same for `/strategies`, `/positions`, …)
 
 ## Local

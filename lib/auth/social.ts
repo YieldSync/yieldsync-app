@@ -4,6 +4,7 @@ import {
   bytesToBase58,
 } from "@/lib/auth/solana-proof";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { normalizeNextPath } from "@/lib/site";
 
 const SOLANA_STATEMENT =
   "Sign in to YieldSync to track Meteora DLMM wallets.";
@@ -174,10 +175,7 @@ export async function signInWithGoogle() {
     typeof window !== "undefined"
       ? new URLSearchParams(window.location.search).get("next")
       : null;
-  const safeNext =
-    next && next.startsWith("/") && !next.startsWith("//")
-      ? next
-      : "/dashboard";
+  const safeNext = normalizeNextPath(next, window.location.hostname);
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {

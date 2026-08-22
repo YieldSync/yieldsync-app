@@ -25,8 +25,8 @@ const nextConfig = {
     const routes = [
       ["/login", `${app}/login`],
       ["/signup", `${app}/signup`],
-      ["/dashboard", `${app}/dashboard`],
-      ["/dashboard/:path*", `${app}/dashboard/:path*`],
+      ["/dashboard", `${app}/`],
+      ["/dashboard/:path*", `${app}/:path*`],
       ["/discover", `${app}/discover`],
       ["/activities", `${app}/activities`],
       ["/tracking-wallets", `${app}/tracking-wallets`],

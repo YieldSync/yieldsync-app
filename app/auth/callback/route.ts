@@ -6,20 +6,16 @@ import {
   getSupabaseUrl,
   isValidSupabaseUrl,
 } from "@/lib/supabase/env";
-
-function safeNext(raw: string | null) {
-  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return "/dashboard";
-  return raw;
-}
+import { normalizeNextPath } from "@/lib/site";
 
 /**
  * OAuth / email-confirm return — exchange the PKCE code on the server so the
  * code verifier cookie set by createBrowserClient is readable via @supabase/ssr.
  */
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams, origin, hostname } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = safeNext(searchParams.get("next"));
+  const next = normalizeNextPath(searchParams.get("next"), hostname);
 
   if (!code) {
     return NextResponse.redirect(`${origin}/login?error=auth`);

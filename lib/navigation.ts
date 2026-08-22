@@ -13,6 +13,8 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
+import { APP_HOST } from "@/lib/site"
+
 export type SectionId =
   | "dashboard"
   | "activities"
@@ -141,9 +143,13 @@ export function isSectionId(value: string): value is SectionId {
   return (sectionIds as string[]).includes(value)
 }
 
-/** Full href for a section. Dashboard stays at /dashboard; others are /discover etc. */
+/** Full href for a section. On app.yieldsync.io the overview is `/`. */
 export function sectionHref(id: SectionId) {
-  return id === "dashboard" ? BASE_PATH : `/${id}`
+  if (id !== "dashboard") return `/${id}`
+  if (typeof window !== "undefined" && window.location.hostname === APP_HOST) {
+    return "/"
+  }
+  return BASE_PATH
 }
 
 export function pathToSection(pathname: string): SectionId {
